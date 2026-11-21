@@ -1,0 +1,27 @@
+# Virtual environments (CRITICAL: prevents pushing large PyTorch binaries)
+.venv/
+venv/
+env/
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local SQLite database (regenerated via backend/seed_db.py)
+*.db
+*.sqlite3
+
+# HuggingFace & model caches
+hf_cache/
+.cache/
+
+# Environment & secrets
+.env
+.env.local
+
+# IDE & OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

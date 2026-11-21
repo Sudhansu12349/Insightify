@@ -1,0 +1,2890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Insightify — Product Review Intelligence</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body {
+      background-color: #f4f5fb;
+      color: #111827;
+      margin: 0;
+      overflow-x: hidden;
+    }
+    /* Sidebar gradient & styling matching mockups */
+    .sidebar-bg {
+      background: linear-gradient(180deg, #25105a 0%, #1d0c48 58%, #210e52 100%);
+    }
+    .nav-item {
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      color: rgba(255, 255, 255, 0.78);
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+    }
+    .nav-item.active {
+      background: linear-gradient(90deg, #6328f7 0%, #7c4dff 100%);
+      color: #ffffff;
+      box-shadow: 0 8px 20px -4px rgba(108, 56, 255, 0.55);
+      font-weight: 600;
+    }
+    .card-surface {
+      background: #ffffff;
+      border-radius: 18px;
+      border: 1px solid #eceef8;
+      box-shadow: 0 4px 18px -2px rgba(28, 22, 65, 0.04);
+    }
+    .soft-icon-box {
+      background: #f0edff;
+      color: #5b21ff;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-primary-purple {
+      background: linear-gradient(90deg, #5618f5 0%, #6d28ff 100%);
+      color: #ffffff;
+      box-shadow: 0 6px 16px -3px rgba(88, 28, 245, 0.42);
+      transition: all 0.18s ease;
+    }
+    .btn-primary-purple:hover {
+      background: linear-gradient(90deg, #4b12df 0%, #601ef0 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px -3px rgba(88, 28, 245, 0.52);
+    }
+    .btn-primary-purple:active {
+      transform: translateY(0);
+    }
+    /* Stacked bar styling */
+    .aspect-bar-track {
+      height: 28px;
+      border-radius: 9999px;
+      overflow: hidden;
+      display: flex;
+      width: 100%;
+      background: #f3f4f6;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .aspect-seg-pos {
+      background: linear-gradient(90deg, #129c42 0%, #16a34a 100%);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12.5px;
+      font-weight: 700;
+      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .aspect-seg-neu {
+      background: linear-gradient(90deg, #facc15 0%, #eab308 100%);
+      color: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12.5px;
+      font-weight: 700;
+      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .aspect-seg-neg {
+      background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12.5px;
+      font-weight: 700;
+      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f2f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd0e6;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #9ca3cf;
+    }
+    .topic-word {
+      transition: transform 0.18s ease, color 0.18s ease, background-color 0.18s ease;
+      cursor: pointer;
+      padding: 2px 8px;
+      border-radius: 8px;
+      user-select: none;
+    }
+    .topic-word:hover {
+      transform: scale(1.07);
+      background: rgba(99, 40, 247, 0.08);
+    }
+    .topic-word.selected-topic {
+      background: rgba(99, 40, 247, 0.14);
+      outline: 2px solid #6328f7;
+    }
+    @keyframes pulseSubtle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+    .animate-pulse-subtle {
+      animation: pulseSubtle 1.5s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col lg:flex-row">
+
+  <!-- Mobile Top Header -->
+  <div class="lg:hidden sidebar-bg text-white px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-md">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7c4dff] to-[#5618f5] flex items-center justify-center shadow-md">
+        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/>
+          <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="font-bold text-base leading-tight">Insightify</div>
+        <div class="text-[11px] text-purple-200/80">Product Review Intelligence</div>
+      </div>
+    </div>
+    <button type="button" onclick="toggleMobileSidebar()" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white" aria-label="Toggle Menu">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Mobile Backdrop -->
+  <div id="mobileBackdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+  <!-- LEFT SIDEBAR -->
+  <aside id="appSidebar" class="sidebar-bg w-64 shrink-0 text-white flex flex-col justify-between fixed lg:sticky top-0 left-0 h-screen z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out overflow-hidden">
+    <!-- Top Brand & Navigation -->
+    <div class="p-5 relative z-10">
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3.5 mb-8 px-1">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#7c4dff] to-[#5618f5] flex items-center justify-center shadow-lg shadow-purple-900/50 border border-purple-400/30 shrink-0">
+          <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/>
+            <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="text-[20px] font-extrabold tracking-tight text-white leading-tight">Insightify</div>
+          <div class="text-[11.5px] text-purple-200/85 font-medium">Product Review Intelligence</div>
+        </div>
+      </div>
+
+      <!-- Navigation List -->
+      <nav class="space-y-1.5" aria-label="Main Navigation">
+        <button type="button" onclick="switchTab('overview')" id="nav-overview" class="nav-item active w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-[14.5px] text-left">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5Z"/>
+          </svg>
+          <span>Overview</span>
+        </button>
+
+        <button type="button" onclick="switchTab('analyzer')" id="nav-analyzer" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-[14.5px] text-left">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01"/>
+          </svg>
+          <span>Sentiment Analyzer</span>
+        </button>
+
+        <button type="button" onclick="switchTab('aspects')" id="nav-aspects" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-[14.5px] text-left">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 12 12 17 22 12"/>
+            <polyline points="2 17 12 22 22 17"/>
+          </svg>
+          <span>Aspect Analysis</span>
+        </button>
+
+        <button type="button" onclick="switchTab('inbox')" id="nav-inbox" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-[14.5px] text-left justify-between">
+          <div class="flex items-center gap-3.5">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <span>Review Inbox</span>
+          </div>
+          <span id="sidebarPendingBadge" class="text-[11px] bg-white/15 px-2 py-0.5 rounded-full font-semibold">2</span>
+        </button>
+
+        <button type="button" onclick="switchTab('bulk')" id="nav-bulk" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-[14.5px] text-left">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 12v9"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="m16 16-4-4-4 4"/>
+          </svg>
+          <span>Bulk Analysis</span>
+        </button>
+
+        <button type="button" onclick="switchTab('reports')" id="nav-reports" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-[14.5px] text-left">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 20V10M12 20V4M6 20v-6"/>
+          </svg>
+          <span>Insights &amp; Reports</span>
+        </button>
+
+        <button type="button" onclick="switchTab('evaluation')" id="nav-evaluation" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-[14.5px] text-left">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 2v7.31L4.72 18.55A2 2 0 0 0 6.45 21.5h11.1a2 2 0 0 0 1.73-2.95L14 9.31V2"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.5 2h7"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 15h10"/>
+          </svg>
+          <span>Model Evaluation</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Bottom Wavy Callout Area -->
+    <div class="relative pt-12 pb-6 px-5 mt-auto">
+      <!-- Wavy layered SVG background matching screenshot -->
+      <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 256 220" preserveAspectRatio="none">
+        <path d="M0,40 C65,0 135,75 256,25 L256,220 L0,220 Z" fill="rgba(116, 52, 255, 0.25)"/>
+        <path d="M0,95 C90,55 170,130 256,80 L256,220 L0,220 Z" fill="rgba(139, 92, 246, 0.28)"/>
+        <path d="M0,165 C80,135 180,190 256,150 L256,220 L0,220 Z" fill="rgba(167, 139, 250, 0.22)"/>
+      </svg>
+      <div class="relative z-10">
+        <div class="w-11 h-11 rounded-xl bg-[#6d35f7] border border-purple-300/30 flex items-center justify-center mb-3 shadow-md">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="font-bold text-[15px] text-white mb-1">For Feedback Team</div>
+        <p id="sidebarFooterDesc" class="text-[12.5px] text-purple-100/85 leading-relaxed">
+          Turn customer reviews into actionable insights.
+        </p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- TOP HEADER BAR -->
+    <header class="bg-white/85 backdrop-blur-md border-b border-gray-200/80 px-6 lg:px-8 py-4 sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h1 id="pageHeaderTitle" class="text-2xl lg:text-[26px] font-extrabold text-gray-900 tracking-tight leading-tight">Overview</h1>
+        <p id="pageHeaderSubtitle" class="text-[13.5px] text-gray-600 mt-0.5">A summarized view of customer feedback and sentiment insights.</p>
+      </div>
+
+      <!-- Top Right Controls: Feedback Team Pill, Bell, Avatar -->
+      <div class="flex items-center gap-3 relative">
+        <button type="button" onclick="openTeamModal()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-[#f1eeff] hover:bg-[#e5dfff] text-[#5b21ff] font-semibold text-[13.5px] transition shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span id="activeWorkspaceLabel">Feedback Team</span>
+        </button>
+
+        <!-- Notification Bell -->
+        <div class="relative">
+          <button type="button" onclick="toggleNotifications()" class="w-10 h-10 rounded-full bg-[#f3f4f8] hover:bg-gray-200/70 flex items-center justify-center text-gray-700 transition relative" aria-label="Notifications">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+            <span id="notifDot" class="w-2.5 h-2.5 rounded-full bg-[#6328f7] border-2 border-white absolute top-1.5 right-2"></span>
+          </button>
+
+          <!-- Notification Dropdown -->
+          <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-4 z-50">
+            <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-gray-100">
+              <span class="font-bold text-sm text-gray-900">Notifications</span>
+              <button type="button" onclick="markAllNotificationsRead()" class="text-xs text-[#5b21ff] hover:underline font-medium">Mark all read</button>
+            </div>
+            <div class="space-y-2.5 text-xs">
+              <div class="p-2.5 rounded-xl bg-purple-50/70 flex gap-2.5 items-start">
+                <span class="w-2 h-2 rounded-full bg-[#6328f7] mt-1 shrink-0"></span>
+                <div>
+                  <div class="font-semibold text-gray-800">DistilBERT evaluation completed</div>
+                  <div class="text-gray-500 mt-0.5">Achieved 92.0% accuracy on Product_Reviews test set.</div>
+                </div>
+              </div>
+              <div class="p-2.5 rounded-xl hover:bg-gray-50 flex gap-2.5 items-start">
+                <span class="w-2 h-2 rounded-full bg-amber-400 mt-1 shrink-0"></span>
+                <div>
+                  <div class="font-semibold text-gray-800">Spike in "Battery drain" mentions</div>
+                  <div class="text-gray-500 mt-0.5">284 mentions detected for Smartphone X in last 30 days.</div>
+                </div>
+              </div>
+              <div class="p-2.5 rounded-xl hover:bg-gray-50 flex gap-2.5 items-start">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 mt-1 shrink-0"></span>
+                <div>
+                  <div class="font-semibold text-gray-800">2 new reviews in Feedback Queue</div>
+                  <div class="text-gray-500 mt-0.5">RV-1046 and RV-1047 are pending sentiment analysis.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Avatar F -->
+        <button type="button" onclick="showToast('Signed in as Feedback Team Lead — Sudhansu Raj')" class="w-10 h-10 rounded-full bg-gradient-to-br from-[#6c2cf8] to-[#5115e0] text-white font-bold text-base flex items-center justify-center shadow-md hover:opacity-95 transition">
+          F
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 p-5 lg:p-7 max-w-[1440px] w-full mx-auto space-y-6">
+
+      <!-- ========================================================= -->
+      <!-- VIEW 1: OVERVIEW (Matches Image 3: Product Review Dashboard) -->
+      <!-- ========================================================= -->
+      <section id="view-overview" class="space-y-5">
+        <!-- Top Right Filter Row -->
+        <div class="flex flex-wrap items-end justify-end gap-4">
+          <div>
+            <label for="overviewCategorySelect" class="block text-[12.5px] font-bold text-gray-800 mb-1">Product Category</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5b21ff]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                  <line x1="12" y1="18" x2="12.01" y2="18"/>
+                </svg>
+              </span>
+              <select id="overviewCategorySelect" onchange="updateOverviewDashboard()" class="pl-9 pr-9 py-2 bg-white border border-gray-200 rounded-xl text-[13.5px] font-medium text-gray-800 shadow-sm focus:outline-none focus:border-[#5b21ff] min-w-[200px] appearance-none cursor-pointer">
+                <option value="All Products">All Products</option>
+                <option value="Smartphone X">Smartphone X</option>
+                <option value="Wireless Headphones">Wireless Headphones</option>
+                <option value="Laptop Pro">Laptop Pro</option>
+              </select>
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label for="overviewDateSelect" class="block text-[12.5px] font-bold text-gray-800 mb-1">Date Range</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5b21ff]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              </span>
+              <select id="overviewDateSelect" onchange="updateOverviewDashboard()" class="pl-9 pr-9 py-2 bg-white border border-gray-200 rounded-xl text-[13.5px] font-medium text-gray-800 shadow-sm focus:outline-none focus:border-[#5b21ff] min-w-[185px] appearance-none cursor-pointer">
+                <option value="Last 30 Days">Last 30 Days</option>
+                <option value="Last 7 Days">Last 7 Days</option>
+                <option value="Last 90 Days">Last 90 Days</option>
+              </select>
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Summary KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <!-- Total Reviews -->
+          <div class="card-surface p-5 flex items-center gap-4">
+            <div class="w-13 h-13 p-3.5 rounded-2xl bg-[#f0edff] text-[#5b21ff] flex items-center justify-center shrink-0">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01"/>
+              </svg>
+            </div>
+            <div>
+              <div id="kpiTotalReviews" class="text-[26px] font-extrabold text-gray-900 leading-tight">12,840</div>
+              <div class="text-[13.5px] font-medium text-gray-600">Total Reviews</div>
+            </div>
+          </div>
+
+          <!-- Positive Reviews -->
+          <div class="card-surface p-5 flex items-center gap-4">
+            <div class="w-13 h-13 p-3.5 rounded-2xl bg-[#e8f8ee] text-[#16a34a] flex items-center justify-center shrink-0">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+              </svg>
+            </div>
+            <div>
+              <div id="kpiPosReviews" class="text-[26px] font-extrabold text-gray-900 leading-tight">68.4%</div>
+              <div class="text-[13.5px] font-medium text-gray-600">Positive Reviews</div>
+            </div>
+          </div>
+
+          <!-- Neutral Reviews -->
+          <div class="card-surface p-5 flex items-center gap-4">
+            <div class="w-13 h-13 p-3.5 rounded-2xl bg-[#fef7e0] text-[#eab308] flex items-center justify-center shrink-0">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="8" y1="15" x2="16" y2="15"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+              </svg>
+            </div>
+            <div>
+              <div id="kpiNeuReviews" class="text-[26px] font-extrabold text-gray-900 leading-tight">18.2%</div>
+              <div class="text-[13.5px] font-medium text-gray-600">Neutral Reviews</div>
+            </div>
+          </div>
+
+          <!-- Negative Reviews -->
+          <div class="card-surface p-5 flex items-center gap-4">
+            <div class="w-13 h-13 p-3.5 rounded-2xl bg-[#feeceb] text-[#ef4444] flex items-center justify-center shrink-0">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 16s-1.5-2-4-2-4 2-4 2"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+              </svg>
+            </div>
+            <div>
+              <div id="kpiNegReviews" class="text-[26px] font-extrabold text-gray-900 leading-tight">13.4%</div>
+              <div class="text-[13.5px] font-medium text-gray-600">Negative Reviews</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle Row: Sentiment Distribution & Sentiment Trend -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Sentiment Distribution Card (5 cols) -->
+          <div class="card-surface p-6 lg:col-span-5 flex flex-col justify-between">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="soft-icon-box w-9 h-9">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01"/>
+                </svg>
+              </div>
+              <h2 class="text-[17px] font-bold text-gray-900">Sentiment Distribution</h2>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-around gap-6 my-auto py-2">
+              <!-- SVG Donut Chart -->
+              <div class="relative w-48 h-48 flex items-center justify-center shrink-0">
+                <svg id="overviewDonutSvg" class="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                  <!-- Background ring -->
+                  <circle cx="60" cy="60" r="46" fill="none" stroke="#f3f4f6" stroke-width="18"></circle>
+                  <!-- Positive Segment -->
+                  <circle id="donutPosSeg" cx="60" cy="60" r="46" fill="none" stroke="#16a34a" stroke-width="18" stroke-dasharray="197.7 289.0" stroke-dashoffset="0"></circle>
+                  <!-- Neutral Segment -->
+                  <circle id="donutNeuSeg" cx="60" cy="60" r="46" fill="none" stroke="#facc15" stroke-width="18" stroke-dasharray="52.6 289.0" stroke-dashoffset="-197.7"></circle>
+                  <!-- Negative Segment -->
+                  <circle id="donutNegSeg" cx="60" cy="60" r="46" fill="none" stroke="#ef4444" stroke-width="18" stroke-dasharray="38.7 289.0" stroke-dashoffset="-250.3"></circle>
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span id="donutCenterCount" class="text-[23px] font-extrabold text-gray-900 leading-tight">12,840</span>
+                  <span class="text-[13px] font-medium text-gray-600">Reviews</span>
+                </div>
+              </div>
+
+              <!-- Legend -->
+              <div class="space-y-3.5 min-w-[155px]">
+                <div class="flex items-center justify-between text-[14px]">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-3.5 h-3.5 rounded-full bg-[#16a34a] inline-block"></span>
+                    <span class="text-gray-700 font-medium">Positive</span>
+                  </div>
+                  <span id="legendPosPct" class="font-bold text-gray-900">68.4%</span>
+                </div>
+                <div class="flex items-center justify-between text-[14px]">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-3.5 h-3.5 rounded-full bg-[#facc15] inline-block"></span>
+                    <span class="text-gray-700 font-medium">Neutral</span>
+                  </div>
+                  <span id="legendNeuPct" class="font-bold text-gray-900">18.2%</span>
+                </div>
+                <div class="flex items-center justify-between text-[14px]">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-3.5 h-3.5 rounded-full bg-[#ef4444] inline-block"></span>
+                    <span class="text-gray-700 font-medium">Negative</span>
+                  </div>
+                  <span id="legendNegPct" class="font-bold text-gray-900">13.4%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sentiment Trend Card (7 cols) -->
+          <div class="card-surface p-6 lg:col-span-7 flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <div class="flex items-center gap-3">
+                <div class="soft-icon-box w-9 h-9">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+                    <polyline points="16 7 22 7 22 13"/>
+                  </svg>
+                </div>
+                <h2 class="text-[17px] font-bold text-gray-900">Sentiment Trend</h2>
+              </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row items-center gap-4">
+              <!-- Custom Responsive SVG Trend Line Chart matching screenshot -->
+              <div class="flex-1 w-full overflow-x-auto">
+                <svg id="trendChartSvg" viewBox="0 0 560 210" class="w-full h-auto min-w-[440px]">
+                  <defs>
+                    <linearGradient id="posAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#16a34a" stop-opacity="0.22"/>
+                      <stop offset="100%" stop-color="#16a34a" stop-opacity="0.02"/>
+                    </linearGradient>
+                  </defs>
+                  <!-- Horizontal Grid Lines & Y-Axis Labels -->
+                  <g class="text-[11px] fill-gray-500 font-medium">
+                    <text x="34" y="24" text-anchor="end">100%</text>
+                    <line x1="44" y1="20" x2="540" y2="20" stroke="#eef0f6" stroke-width="1"/>
+                    <text x="34" y="54" text-anchor="end">80%</text>
+                    <line x1="44" y1="50" x2="540" y2="50" stroke="#eef0f6" stroke-width="1"/>
+                    <text x="34" y="84" text-anchor="end">60%</text>
+                    <line x1="44" y1="80" x2="540" y2="80" stroke="#eef0f6" stroke-width="1"/>
+                    <text x="34" y="114" text-anchor="end">40%</text>
+                    <line x1="44" y1="110" x2="540" y2="110" stroke="#eef0f6" stroke-width="1"/>
+                    <text x="34" y="144" text-anchor="end">20%</text>
+                    <line x1="44" y1="140" x2="540" y2="140" stroke="#eef0f6" stroke-width="1"/>
+                    <text x="34" y="174" text-anchor="end">0%</text>
+                    <line x1="44" y1="170" x2="540" y2="170" stroke="#d1d5db" stroke-width="1"/>
+                  </g>
+
+                  <!-- X-Axis Dates -->
+                  <g class="text-[10.5px] fill-gray-600 font-medium" text-anchor="middle">
+                    <text x="52" y="192">Oct 18</text>
+                    <text x="99" y="192">Oct 21</text>
+                    <text x="147" y="192">Oct 24</text>
+                    <text x="195" y="192">Oct 27</text>
+                    <text x="242" y="192">Oct 30</text>
+                    <text x="290" y="192">Nov 2</text>
+                    <text x="338" y="192">Nov 5</text>
+                    <text x="385" y="192">Nov 8</text>
+                    <text x="433" y="192">Nov 11</text>
+                    <text x="481" y="192">Nov 14</text>
+                    <text x="528" y="192">Nov 17</text>
+                  </g>
+
+                  <!-- Area fill under Positive -->
+                  <path id="trendPosArea" d="M52,80 L99,75 L147,74 L195,77 L242,79 L290,72 L338,69 L385,70 L433,74 L481,71 L528,67 L528,170 L52,170 Z" fill="url(#posAreaGrad)"/>
+
+                  <!-- Positive Line -->
+                  <polyline id="trendPosLine" fill="none" stroke="#16a34a" stroke-width="2.5" points="52,80 99,75 147,74 195,77 242,79 290,72 338,69 385,70 433,74 481,71 528,67"/>
+                  <!-- Neutral Line -->
+                  <polyline id="trendNeuLine" fill="none" stroke="#facc15" stroke-width="2.2" points="52,136 99,137 147,138 195,137 242,136 290,137 338,136 385,136 433,135 481,136 528,135"/>
+                  <!-- Negative Line -->
+                  <polyline id="trendNegLine" fill="none" stroke="#ef4444" stroke-width="2.2" points="52,152 99,151 147,152 195,150 242,152 290,152 338,151 385,151 433,150 481,151 528,149"/>
+
+                  <!-- Dots for Positive, Neutral, Negative -->
+                  <g id="trendDotsGroup">
+                    <!-- Positive dots -->
+                    <circle cx="52" cy="80" r="3.5" fill="#16a34a"/><circle cx="99" cy="75" r="3.5" fill="#16a34a"/><circle cx="147" cy="74" r="3.5" fill="#16a34a"/><circle cx="195" cy="77" r="3.5" fill="#16a34a"/><circle cx="242" cy="79" r="3.5" fill="#16a34a"/><circle cx="290" cy="72" r="3.5" fill="#16a34a"/><circle cx="338" cy="69" r="3.5" fill="#16a34a"/><circle cx="385" cy="70" r="3.5" fill="#16a34a"/><circle cx="433" cy="74" r="3.5" fill="#16a34a"/><circle cx="481" cy="71" r="3.5" fill="#16a34a"/><circle cx="528" cy="67" r="3.5" fill="#16a34a"/>
+                    <!-- Neutral dots -->
+                    <circle cx="52" cy="136" r="3.2" fill="#facc15"/><circle cx="99" cy="137" r="3.2" fill="#facc15"/><circle cx="147" cy="138" r="3.2" fill="#facc15"/><circle cx="195" cy="137" r="3.2" fill="#facc15"/><circle cx="242" cy="136" r="3.2" fill="#facc15"/><circle cx="290" cy="137" r="3.2" fill="#facc15"/><circle cx="338" cy="136" r="3.2" fill="#facc15"/><circle cx="385" cy="136" r="3.2" fill="#facc15"/><circle cx="433" cy="135" r="3.2" fill="#facc15"/><circle cx="481" cy="136" r="3.2" fill="#facc15"/><circle cx="528" cy="135" r="3.2" fill="#facc15"/>
+                    <!-- Negative dots -->
+                    <circle cx="52" cy="152" r="3.2" fill="#ef4444"/><circle cx="99" cy="151" r="3.2" fill="#ef4444"/><circle cx="147" cy="152" r="3.2" fill="#ef4444"/><circle cx="195" cy="150" r="3.2" fill="#ef4444"/><circle cx="242" cy="152" r="3.2" fill="#ef4444"/><circle cx="290" cy="152" r="3.2" fill="#ef4444"/><circle cx="338" cy="151" r="3.2" fill="#ef4444"/><circle cx="385" cy="151" r="3.2" fill="#ef4444"/><circle cx="433" cy="150" r="3.2" fill="#ef4444"/><circle cx="481" cy="151" r="3.2" fill="#ef4444"/><circle cx="528" cy="149" r="3.2" fill="#ef4444"/>
+                  </g>
+                </svg>
+              </div>
+
+              <!-- Right Legend -->
+              <div class="flex md:flex-col gap-4 md:gap-3 shrink-0 text-[13.5px] font-medium text-gray-700 pr-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#16a34a]"></span>
+                  <span>Positive</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#facc15]"></span>
+                  <span>Neutral</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#ef4444]"></span>
+                  <span>Negative</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row: Aspect-Level Sentiment & Recent Reviews -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Aspect-Level Sentiment (6 cols) -->
+          <div class="card-surface p-6 lg:col-span-6 flex flex-col justify-between">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="soft-icon-box w-9 h-9">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+                  <polyline points="16 7 22 7 22 13"/>
+                </svg>
+              </div>
+              <h2 class="text-[17px] font-bold text-gray-900">Aspect-Level Sentiment</h2>
+            </div>
+
+            <div id="overviewAspectBarsContainer" class="space-y-3.5">
+              <!-- Populated by JS -->
+            </div>
+
+            <!-- Legend -->
+            <div class="flex items-center justify-center gap-6 mt-5 pt-2 text-[13px] font-medium text-gray-700">
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#16a34a]"></span>Positive</div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#facc15]"></span>Neutral</div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#ef4444]"></span>Negative</div>
+            </div>
+          </div>
+
+          <!-- Recent Reviews (6 cols) -->
+          <div class="card-surface p-6 lg:col-span-6 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="soft-icon-box w-9 h-9">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                  </svg>
+                </div>
+                <h2 class="text-[17px] font-bold text-gray-900">Recent Reviews</h2>
+              </div>
+              <button type="button" onclick="switchTab('inbox')" class="text-[13.5px] font-bold text-[#5b21ff] hover:text-[#4312cc] flex items-center gap-1">
+                <span>View All</span>
+                <span>&rarr;</span>
+              </button>
+            </div>
+
+            <div id="overviewRecentReviewsList" class="divide-y divide-gray-100 my-auto">
+              <!-- Item 1 -->
+              <div class="py-3.5 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-[145px]">
+                  <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+                    </svg>
+                  </div>
+                  <span class="font-bold text-[13.5px] text-gray-900">Smartphone X</span>
+                </div>
+                <p class="text-[13px] text-gray-700 flex-1 line-clamp-2">“The camera is amazing and the display is crystal clear.”</p>
+                <span class="px-3 py-1 rounded-full text-[12px] font-bold bg-[#dcfce7] text-[#15803d] shrink-0">Positive</span>
+                <span class="text-[12.5px] text-gray-500 font-medium shrink-0">Nov 17, 2026</span>
+              </div>
+
+              <!-- Item 2 -->
+              <div class="py-3.5 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-[145px]">
+                  <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+                      <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+                    </svg>
+                  </div>
+                  <span class="font-bold text-[13.5px] text-gray-900">Wireless Headphones</span>
+                </div>
+                <p class="text-[13px] text-gray-700 flex-1 line-clamp-2">“Good sound quality, but the battery life could be better.”</p>
+                <span class="px-3 py-1 rounded-full text-[12px] font-bold bg-[#fef3c7] text-[#b45309] shrink-0">Neutral</span>
+                <span class="text-[12.5px] text-gray-500 font-medium shrink-0">Nov 16, 2026</span>
+              </div>
+
+              <!-- Item 3 -->
+              <div class="py-3.5 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-[145px]">
+                  <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                      <rect x="3" y="4" width="18" height="12" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/>
+                    </svg>
+                  </div>
+                  <span class="font-bold text-[13.5px] text-gray-900">Laptop Pro</span>
+                </div>
+                <p class="text-[13px] text-gray-700 flex-1 line-clamp-2">“Performance is excellent, but it gets quite hot during heavy use.”</p>
+                <span class="px-3 py-1 rounded-full text-[12px] font-bold bg-[#fee2e2] text-[#b91c1c] shrink-0">Negative</span>
+                <span class="text-[12.5px] text-gray-500 font-medium shrink-0">Nov 14, 2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 2: SENTIMENT ANALYZER (Matches Image 4)              -->
+      <!-- ========================================================= -->
+      <section id="view-analyzer" class="space-y-6 hidden">
+        <!-- Top 2-Column Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Left Card: Analyze Customer Reviews (6 cols) -->
+          <div class="card-surface p-6 lg:col-span-6 flex flex-col justify-between">
+            <div>
+              <div class="flex items-start gap-3 mb-4">
+                <div class="soft-icon-box w-10 h-10 shrink-0 mt-0.5">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-[18px] font-bold text-gray-900 leading-snug">Analyze Customer Reviews</h2>
+                  <p class="text-[13px] text-gray-600">Choose a data source to analyze reviews.</p>
+                </div>
+              </div>
+
+              <!-- 3 Mode Buttons: Single Review | Upload File | Select Dataset -->
+              <div class="grid grid-cols-3 gap-2.5 mb-4">
+                <button type="button" id="srcTabSingle" onclick="switchAnalyzerSource('single')" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-[13.5px] font-semibold bg-[#5b21ff] text-white shadow-sm transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                  <span>Single Review</span>
+                </button>
+                <button type="button" id="srcTabUpload" onclick="switchAnalyzerSource('upload')" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-[13.5px] font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition">
+                  <svg class="w-4 h-4 text-[#5b21ff]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/>
+                  </svg>
+                  <span>Upload File</span>
+                </button>
+                <button type="button" id="srcTabDataset" onclick="switchAnalyzerSource('dataset')" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-[13.5px] font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition">
+                  <svg class="w-4 h-4 text-[#5b21ff]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                  </svg>
+                  <span>Select Dataset</span>
+                </button>
+              </div>
+
+              <!-- Optional Helper Panel for Upload File / Select Dataset -->
+              <div id="analyzerUploadHelper" class="hidden mb-3 p-3.5 rounded-xl bg-purple-50/70 border border-purple-200/80 space-y-2">
+    <div class="flex items-center justify-between gap-3">
+    <div class="text-xs text-gray-700">
+      <span class="font-bold text-[#5b21ff]">Upload Review Document:</span>
+      Accepts valid <code>.txt</code>, <code>.csv</code>, or <code>.json</code> files (max 1 MB).
+    </div>
+    <label class="px-3 py-1.5 rounded-lg bg-[#5b21ff] text-white text-xs font-semibold cursor-pointer hover:bg-[#4a16e0] shrink-0">
+      Choose File
+      <input id="singleReviewFileInput" type="file" accept=".txt,.csv,.json" class="hidden" onchange="handleSingleFileUpload(event)" />
+    </label>
+  </div>
+  <div id="uploadValidationMsg" class="hidden text-xs font-semibold px-3 py-2 rounded-lg"></div>
+</div>
+
+              <div id="analyzerDatasetHelper" class="hidden mb-3 p-3 rounded-xl bg-purple-50/70 border border-purple-200/80">
+                <label for="presetReviewSelect" class="block text-xs font-bold text-[#5b21ff] mb-1.5">Load Sample Review from Benchmark Dataset:</label>
+                <select id="presetReviewSelect" onchange="loadPresetReview(this.value)" class="w-full px-3 py-1.5 rounded-lg border border-purple-200 bg-white text-xs font-medium text-gray-800">
+                  <option value="The phone has an amazing camera with excellent image quality, but the battery drains too quickly, especially during heavy use.">Sample #1 (Mixed): Amazing camera, battery drains quickly</option>
+                  <option value="Absolutely love this Smartphone X! The OLED display is crystal clear, performance is blazingly fast, and build quality feels ultra premium.">Sample #2 (Positive): Crystal clear display &amp; fast performance</option>
+                  <option value="Very disappointed with the battery drain and severe heating issue during gaming. Customer service was also unhelpful.">Sample #3 (Negative): Severe battery drain &amp; heating issue</option>
+                  <option value="Good sound quality and decent noise cancellation for the price, though the ear cushions feel slightly warm after two hours.">Sample #4 (Neutral): Decent sound quality, average comfort</option>
+                </select>
+              </div>
+
+              <!-- Review Textarea -->
+              <div class="relative mb-4">
+                <textarea id="reviewInputText" oninput="updateCharCount()" maxlength="500" rows="5" class="w-full p-4 rounded-2xl bg-[#f8f9fe] border border-gray-200/90 text-[15px] text-gray-800 leading-relaxed focus:outline-none focus:border-[#5b21ff] focus:bg-white transition resize-none" placeholder="Paste or type a customer product review here...">The phone has an amazing camera with excellent image quality, but the battery drains too quickly, especially during heavy use.</textarea>
+                <div id="reviewCharCount" class="absolute bottom-3 right-4 text-[12.5px] font-medium text-gray-500">127 / 500</div>
+              </div>
+
+              <!-- Dropdowns: Product Category & Model -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                <div>
+                  <label for="analyzerCategorySelect" class="block text-[13px] font-bold text-gray-800 mb-1.5">Product Category</label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5b21ff]">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+                      </svg>
+                    </span>
+                    <input id="analyzerCategorySelect" list="categorySuggestions" type="text" value="General"
+                        placeholder="Type or select category (e.g., Headphones)"
+                       class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13.5px] font-medium text-gray-800 focus:outline-none focus:border-[#5b21ff]" />
+                   <datalist id="categorySuggestions">
+                     <option value="General"></option>
+                    </datalist>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="analyzerModelSelect" class="block text-[13px] font-bold text-gray-800 mb-1.5">Model</label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5b21ff]">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/>
+                      </svg>
+                    </span>
+                    <select id="analyzerModelSelect" class="w-full pl-9 pr-8 py-2.5 bg-white border border-gray-200 rounded-xl text-[13.5px] font-medium text-gray-800 focus:outline-none focus:border-[#5b21ff] appearance-none cursor-pointer">
+                      <option value="DistilBERT (Best)">DistilBERT (Best)</option>
+                      <option value="RoBERTa">RoBERTa</option>
+                      <option value="BERT Base">BERT Base</option>
+                      <option value="SVM (TF-IDF)">SVM (TF-IDF)</option>
+                      <option value="Logistic Regression">Logistic Regression</option>
+                    </select>
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="button" onclick="runSingleReviewAnalysis()" class="btn-primary-purple w-full py-3.5 px-6 rounded-xl font-bold text-[15px] flex items-center justify-center gap-2.5">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                <path d="M5 3v4M3 5h4"/>
+              </svg>
+              <span>Analyze Review</span>
+            </button>
+          </div>
+
+          <!-- Right Card: Analysis Result (6 cols) -->
+          <div class="card-surface p-6 lg:col-span-6 flex flex-col justify-between space-y-4">
+            <!-- Header & Timestamp -->
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="soft-icon-box w-9 h-9">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+                  </svg>
+                </div>
+                <h2 class="text-[18px] font-bold text-gray-900">Analysis Result</h2>
+              </div>
+              <div class="flex items-center gap-1.5 text-[12px] text-gray-500 font-medium">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span id="analysisTimestamp">Analyzed on: Nov 22, 2026, 04:28 PM</span>
+              </div>
+            </div>
+
+            <!-- Overall Sentiment & Confidence Banner -->
+            <div class="p-4 rounded-2xl bg-[#f6f4ff] border border-[#e9e4ff] grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+              <div class="flex items-center gap-3.5 sm:border-r sm:border-purple-200/70 pr-3">
+                <div class="w-12 h-12 rounded-2xl bg-[#e9e3ff] text-[#5b21ff] flex items-center justify-center shrink-0">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="text-[12.5px] font-bold text-gray-800 mb-1">Overall Sentiment</div>
+                  <span id="resultOverallBadge" class="inline-block px-4 py-1 rounded-xl text-[18px] font-extrabold bg-[#e4dcff] text-[#5b21ff]">Mixed</span>
+                </div>
+              </div>
+
+              <div class="pl-1">
+                <div class="text-[12.5px] font-medium text-gray-700">Confidence</div>
+                <div id="resultConfidenceNum" class="text-[20px] font-extrabold text-gray-900 mb-1.5">0.87</div>
+                <div class="w-full h-2.5 rounded-full bg-purple-200/70 overflow-hidden">
+                  <div id="resultConfidenceBar" class="h-full rounded-full bg-gradient-to-r from-[#5b21ff] to-[#7c4dff] transition-all duration-500" style="width: 87%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Middle 2 Sub-Cards: Sentiment Probabilities & Aspect-Level Analysis -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Sentiment Probabilities -->
+              <div class="p-4 rounded-2xl border border-gray-200/80 bg-white">
+                <div class="flex items-center gap-2 mb-3">
+                  <div class="soft-icon-box w-7 h-7 rounded-lg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                    </svg>
+                  </div>
+                  <h3 class="text-[14px] font-bold text-gray-900">Sentiment Probabilities</h3>
+                </div>
+
+                <div class="flex items-center justify-between gap-3">
+                  <!-- Donut Ring -->
+                  <div class="relative w-28 h-28 flex items-center justify-center shrink-0">
+                    <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="38" fill="none" stroke="#ede9fe" stroke-width="12"/>
+                      <circle id="probRingCircle" cx="50" cy="50" r="38" fill="none" stroke="#6328f7" stroke-width="12" stroke-linecap="round" stroke-dasharray="207.7 238.76" stroke-dashoffset="0"/>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                      <span id="probRingPct" class="text-[17px] font-extrabold text-gray-900 leading-none">87%</span>
+                      <span class="text-[10.5px] text-gray-600 font-medium mt-0.5">Confidence</span>
+                    </div>
+                  </div>
+
+                  <!-- Probabilities List -->
+                  <div class="space-y-2 flex-1 text-[12.5px]">
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-1.5 text-gray-700 font-medium"><span class="w-2.5 h-2.5 rounded-full bg-[#6328f7]"></span>Mixed</span>
+                      <span id="probMixedVal" class="font-bold text-gray-900">0.87</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-1.5 text-gray-700 font-medium"><span class="w-2.5 h-2.5 rounded-full bg-[#16a34a]"></span>Positive</span>
+                      <span id="probPosVal" class="font-bold text-gray-900">0.09</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-1.5 text-gray-700 font-medium"><span class="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></span>Negative</span>
+                      <span id="probNegVal" class="font-bold text-gray-900">0.03</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Aspect-Level Analysis -->
+              <div class="p-4 rounded-2xl border border-gray-200/80 bg-white flex flex-col justify-between">
+                <div class="flex items-center gap-2 mb-3">
+                  <div class="soft-icon-box w-7 h-7 rounded-lg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/>
+                    </svg>
+                  </div>
+                  <h3 class="text-[14px] font-bold text-gray-900">Aspect-Level Analysis</h3>
+                </div>
+
+                <div id="resultAspectList" class="space-y-2.5 my-auto">
+                  <div class="flex items-center justify-between p-2 rounded-xl bg-gray-50/80">
+                    <div class="flex items-center gap-2.5">
+                      <span class="soft-icon-box w-8 h-8 rounded-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>
+                        </svg>
+                      </span>
+                      <span class="font-bold text-[13.5px] text-gray-900">Camera</span>
+                    </div>
+                    <span class="px-3 py-1 rounded-lg bg-[#e8f8ee] text-[#15803d] font-bold text-[12.5px] flex items-center gap-1">
+                      <span>&#10003;</span> Positive
+                    </span>
+                  </div>
+
+                  <div class="flex items-center justify-between p-2 rounded-xl bg-gray-50/80">
+                    <div class="flex items-center gap-2.5">
+                      <span class="soft-icon-box w-8 h-8 rounded-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                          <rect x="2" y="7" width="16" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/>
+                        </svg>
+                      </span>
+                      <span class="font-bold text-[13.5px] text-gray-900">Battery</span>
+                    </div>
+                    <span class="px-3 py-1 rounded-lg bg-[#feeceb] text-[#b91c1c] font-bold text-[12.5px] flex items-center gap-1">
+                      <span>&#10005;</span> Negative
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Key Phrases (Explanation) -->
+            <div class="p-4 rounded-2xl border border-gray-200/80 bg-white">
+              <div class="flex items-center gap-2 mb-3">
+                <div class="soft-icon-box w-7 h-7 rounded-lg">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
+                    <path d="M9 18h6"/><path d="M10 22h4"/>
+                  </svg>
+                </div>
+                <h3 class="text-[14px] font-bold text-gray-900">Key Phrases (Explanation)</h3>
+              </div>
+
+              <div id="resultKeyPhrases" class="space-y-2 text-[13.5px]">
+                <div class="px-3.5 py-2 rounded-xl bg-[#eefaf2] text-gray-900 flex items-center gap-2.5">
+                  <span class="w-5 h-5 rounded-full bg-[#bbf7d0] text-[#15803d] flex items-center justify-center text-xs font-bold shrink-0">&#10003;</span>
+                  <span class="font-semibold">“amazing camera”, “excellent image quality”</span>
+                </div>
+                <div class="px-3.5 py-2 rounded-xl bg-[#fef1f1] text-gray-900 flex items-center gap-2.5">
+                  <span class="w-5 h-5 rounded-full bg-[#fecaca] text-[#b91c1c] flex items-center justify-center text-xs font-bold shrink-0">&#10005;</span>
+                  <span class="font-semibold">“battery drains too quickly”, “heavy use”</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Full-Width Card: Review Inbox (Feedback Queue) -->
+        <div class="card-surface p-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+            <div class="flex items-start gap-3">
+              <div class="soft-icon-box w-10 h-10 shrink-0 mt-0.5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-[18px] font-bold text-gray-900">Review Inbox (Feedback Queue)</h2>
+                <p class="text-[13px] text-gray-600">Browse, filter and analyze customer reviews from different products.</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+              <button type="button" onclick="openAddReviewModal()" class="btn-primary-purple px-4 py-2.5 rounded-xl font-bold text-[13.5px] flex items-center gap-1.5">
+                <span class="text-base leading-none">+</span>
+                <span>Add Reviews</span>
+              </button>
+              <button type="button" onclick="toggleQueueFilterBar()" class="px-4 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 font-semibold text-[13.5px] text-gray-700 flex items-center gap-2">
+                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+                <span>Filters</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Collapsible Filter Bar -->
+          <div id="queueFilterBar" class="hidden mb-4 p-3.5 rounded-xl bg-gray-50 border border-gray-200/80 flex flex-wrap items-center gap-3">
+            <input id="queueSearchInput" oninput="renderFeedbackQueueTables()" type="text" placeholder="Search by ID, product, or keyword..." class="px-3.5 py-2 rounded-lg border border-gray-200 bg-white text-xs font-medium text-gray-800 flex-1 min-w-[200px]" />
+            <select id="queueStatusFilter" onchange="renderFeedbackQueueTables()" class="px-3 py-2 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-700">
+              <option value="ALL">All Statuses</option>
+              <option value="Analyzed">Analyzed</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+
+          <!-- Queue Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[780px]">
+              <thead>
+                <tr class="bg-[#f4f3fb] text-gray-800 text-[13px] font-bold">
+                  <th class="py-3 px-4 rounded-l-xl w-10">
+                    <input type="checkbox" onchange="toggleSelectAllQueue(this)" class="w-4 h-4 rounded border-gray-300 text-[#5b21ff] focus:ring-[#5b21ff]" />
+                  </th>
+                  <th class="py-3 px-3">Review ID</th>
+                  <th class="py-3 px-3">Product</th>
+                  <th class="py-3 px-3">Review (Preview)</th>
+                  <th class="py-3 px-3">Rating</th>
+                  <th class="py-3 px-3">Status</th>
+                  <th class="py-3 px-4 rounded-r-xl text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="analyzerQueueTbody" class="divide-y divide-gray-100 text-[13.5px]">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 3: ASPECT ANALYSIS (Sidebar Item #3)                 -->
+      <!-- ========================================================= -->
+      <section id="view-aspects" class="space-y-6 hidden">
+        <div class="card-surface p-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div class="flex items-center gap-3">
+              <div class="soft-icon-box w-10 h-10">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-[18px] font-bold text-gray-900">Fine-Grained Aspect-Based Sentiment Analysis (ABSA)</h2>
+                <p class="text-[13px] text-gray-600">Inspect aspect polarity, mention volume, and top extracted opinion phrases per feature.</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <label for="aspectViewProductSelect" class="text-xs font-bold text-gray-700">Product:</label>
+              <select id="aspectViewProductSelect" onchange="renderAspectDeepDive()" class="px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-[13.5px] font-semibold text-gray-800">
+                <option value="Smartphone X">Smartphone X</option>
+                <option value="Wireless Headphones">Wireless Headphones</option>
+                <option value="Laptop Pro">Laptop Pro</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="aspectDeepDiveCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 4: REVIEW INBOX (Sidebar Item #4)                    -->
+      <!-- ========================================================= -->
+      <section id="view-inbox" class="space-y-6 hidden">
+        <div class="card-surface p-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+            <div class="flex items-center gap-3">
+              <div class="soft-icon-box w-10 h-10">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-[18px] font-bold text-gray-900">All Customer Reviews Inbox</h2>
+                <p class="text-[13px] text-gray-600">Complete repository of customer reviews with one-click AI sentiment &amp; aspect tagging.</p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2.5">
+              <button type="button" onclick="analyzeAllPendingReviews()" class="px-4 py-2.5 rounded-xl bg-[#f0edff] hover:bg-[#e4dcff] text-[#5b21ff] font-bold text-[13.5px] transition">
+                &#9654; Analyze All Pending
+              </button>
+              <button type="button" onclick="openAddReviewModal()" class="btn-primary-purple px-4 py-2.5 rounded-xl font-bold text-[13.5px] flex items-center gap-1.5">
+                <span>+ Add Reviews</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[780px]">
+              <thead>
+                <tr class="bg-[#f4f3fb] text-gray-800 text-[13px] font-bold">
+                  <th class="py-3 px-4 rounded-l-xl">Review ID</th>
+                  <th class="py-3 px-3">Product</th>
+                  <th class="py-3 px-3">Customer Review</th>
+                  <th class="py-3 px-3">Rating</th>
+                  <th class="py-3 px-3">Status</th>
+                  <th class="py-3 px-4 rounded-r-xl text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="fullInboxTbody" class="divide-y divide-gray-100 text-[13.5px]">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 5: BULK ANALYSIS (Sidebar Item #5)                   -->
+      <!-- ========================================================= -->
+      <section id="view-bulk" class="space-y-6 hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="card-surface p-6 lg:col-span-5 flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="soft-icon-box w-10 h-10">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-[18px] font-bold text-gray-900">Batch Dataset Upload</h2>
+                  <p class="text-[13px] text-gray-600">Run high-throughput DistilBERT inference on CSV/JSON batches.</p>
+                </div>
+              </div>
+
+              <label class="border-2 border-dashed border-purple-300 hover:border-[#5b21ff] bg-[#f8f7ff] rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-[#ede9fe] text-[#5b21ff] flex items-center justify-center mb-3">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/>
+                  </svg>
+                </div>
+                <span class="font-bold text-sm text-gray-900">Click to select CSV/JSON file or use preset below</span>
+                <span class="text-xs text-gray-500 mt-1">Supports columns: review_id, product, review_text, rating</span>
+                <input type="file" accept=".csv,.json,.txt" class="hidden" onchange="handleBulkFileSelect(event)" />
+              </label>
+
+              <div class="mb-4">
+                <label for="bulkPresetSelect" class="block text-xs font-bold text-gray-700 mb-1.5">Or Select Benchmark Batch Dataset:</label>
+                <select id="bulkPresetSelect" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-[13.5px] font-medium text-gray-800">
+                  <option value="Smartphone_X_Nov2026_Batch.csv">Smartphone_X_Nov2026_Batch.csv (450 reviews)</option>
+                  <option value="Wireless_Headphones_Q4.csv">Wireless_Headphones_Q4.csv (320 reviews)</option>
+                  <option value="Laptop_Pro_Thermal_Audit.csv">Laptop_Pro_Thermal_Audit.csv (210 reviews)</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="button" onclick="runBulkAnalysisSimulation()" class="btn-primary-purple w-full py-3.5 rounded-xl font-bold text-[14.5px] flex items-center justify-center gap-2">
+              <span>&#9654; Run Batch Inference</span>
+            </button>
+          </div>
+
+          <div class="card-surface p-6 lg:col-span-7 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-[17px] font-bold text-gray-900">Batch Processing Summary</h3>
+                <span id="bulkStatusPill" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Ready &bull; 450 rows processed</span>
+              </div>
+
+              <div class="grid grid-cols-3 gap-3 mb-5">
+                <div class="p-4 rounded-xl bg-[#f0fdf4] border border-emerald-100">
+                  <div class="text-xs font-semibold text-emerald-800">Positive</div>
+                  <div id="bulkPosStat" class="text-2xl font-extrabold text-emerald-700 mt-0.5">68.4%</div>
+                </div>
+                <div class="p-4 rounded-xl bg-[#fefce8] border border-amber-100">
+                  <div class="text-xs font-semibold text-amber-800">Neutral</div>
+                  <div id="bulkNeuStat" class="text-2xl font-extrabold text-amber-700 mt-0.5">18.2%</div>
+                </div>
+                <div class="p-4 rounded-xl bg-[#fef2f2] border border-red-100">
+                  <div class="text-xs font-semibold text-red-800">Negative</div>
+                  <div id="bulkNegStat" class="text-2xl font-extrabold text-red-700 mt-0.5">13.4%</div>
+                </div>
+              </div>
+
+              <div class="text-xs font-bold text-gray-700 mb-2">Sample Batch Output Preview:</div>
+              <div class="overflow-x-auto border border-gray-100 rounded-xl">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-gray-50 text-gray-700 font-bold">
+                    <tr>
+                      <th class="p-2.5">Batch ID</th>
+                      <th class="p-2.5">Review Snippet</th>
+                      <th class="p-2.5">Predicted</th>
+                      <th class="p-2.5">Confidence</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bulkPreviewTbody" class="divide-y divide-gray-100">
+                    <tr>
+                      <td class="p-2.5 font-semibold">B-901</td>
+                      <td class="p-2.5 text-gray-700">Night mode camera shots are super crisp and vibrant.</td>
+                      <td class="p-2.5"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">Positive</span></td>
+                      <td class="p-2.5 font-bold">0.96</td>
+                    </tr>
+                    <tr>
+                      <td class="p-2.5 font-semibold">B-902</td>
+                      <td class="p-2.5 text-gray-700">Battery drops from 100% to 20% in just 4 hours of 5G.</td>
+                      <td class="p-2.5"><span class="px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-bold">Negative</span></td>
+                      <td class="p-2.5 font-bold">0.93</td>
+                    </tr>
+                    <tr>
+                      <td class="p-2.5 font-semibold">B-903</td>
+                      <td class="p-2.5 text-gray-700">Display refresh rate is smooth, speaker volume is average.</td>
+                      <td class="p-2.5"><span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">Neutral</span></td>
+                      <td class="p-2.5 font-bold">0.85</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="mt-4 flex justify-end">
+              <button type="button" onclick="exportReportData('csv')" class="px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                <span>&#8681; Download Batch Results CSV</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 6: INSIGHTS & REPORTS (Matches Image 2)              -->
+      <!-- ========================================================= -->
+      <section id="view-reports" class="space-y-5 hidden">
+        <!-- Top Filter & Action Controls -->
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div class="flex flex-wrap items-end gap-4">
+            <!-- Report Type -->
+            <div>
+              <label for="reportTypeSelect" class="block text-[12.5px] font-bold text-gray-800 mb-1">Report Type</label>
+              <div class="relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5b21ff]">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+                  </svg>
+                </span>
+                <select id="reportTypeSelect" onchange="generateInsightsReport()" class="pl-9 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-[13.5px] font-medium text-gray-800 shadow-sm focus:outline-none focus:border-[#5b21ff] min-w-[210px] appearance-none cursor-pointer">
+                  <option value="Product Insights">Product Insights</option>
+                  <option value="Aspect Deep-Dive">Aspect Deep-Dive</option>
+                  <option value="Executive Summary">Executive Summary</option>
+                </select>
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                </span>
+              </div>
+            </div>
+
+            <!-- Product -->
+            <div>
+              <label for="reportProductSelect" class="block text-[12.5px] font-bold text-gray-800 mb-1">Product</label>
+              <div class="relative">
+                <select id="reportProductSelect" onchange="generateInsightsReport()" class="pl-4 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-[13.5px] font-medium text-gray-800 shadow-sm focus:outline-none focus:border-[#5b21ff] min-w-[185px] appearance-none cursor-pointer">
+                  <option value="Smartphone X">Smartphone X</option>
+                  <option value="Wireless Headphones">Wireless Headphones</option>
+                  <option value="Laptop Pro">Laptop Pro</option>
+                </select>
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                </span>
+              </div>
+            </div>
+
+            <!-- Date Range -->
+            <div>
+              <label for="reportDateSelect" class="block text-[12.5px] font-bold text-gray-800 mb-1">Date Range</label>
+              <div class="relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5b21ff]">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </span>
+                <select id="reportDateSelect" onchange="generateInsightsReport()" class="pl-9 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-[13.5px] font-medium text-gray-800 shadow-sm focus:outline-none focus:border-[#5b21ff] min-w-[245px] appearance-none cursor-pointer">
+                  <option value="Oct 18, 2026 – Nov 17, 2026">Oct 18, 2026 – Nov 17, 2026</option>
+                  <option value="Sep 18, 2026 – Oct 17, 2026">Sep 18, 2026 – Oct 17, 2026</option>
+                  <option value="Q4 2026 Full Quarter">Q4 2026 Full Quarter</option>
+                </select>
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Generate Report & Export Buttons -->
+          <div class="flex items-center gap-3">
+            <button type="button" onclick="generateInsightsReport(true)" class="btn-primary-purple px-5 py-2.5 rounded-xl font-bold text-[13.5px] flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              <span>Generate Report</span>
+            </button>
+            <button type="button" onclick="exportReportData('csv')" class="px-4 py-2.5 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 font-bold text-[13.5px] text-gray-800 flex items-center gap-2 shadow-sm">
+              <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>Export</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Top 2-Column Row: Aspect-wise Sentiment & Top Topics Word Cloud -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Aspect-wise Sentiment (6 cols) -->
+          <div class="card-surface p-6 lg:col-span-6 flex flex-col justify-between">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="soft-icon-box w-9 h-9">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+                </svg>
+              </div>
+              <h2 id="reportAspectCardTitle" class="text-[17px] font-bold text-gray-900">Aspect-wise Sentiment (Smartphone X)</h2>
+            </div>
+
+            <div id="reportAspectBarsContainer" class="space-y-3.5">
+              <!-- Populated by JS -->
+            </div>
+
+            <div class="flex items-center justify-center gap-6 mt-5 pt-2 text-[13px] font-medium text-gray-700">
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#16a34a]"></span>Positive</div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#facc15]"></span>Neutral</div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#ef4444]"></span>Negative</div>
+            </div>
+          </div>
+
+          <!-- Top Topics (From Customer Reviews) Word Cloud (6 cols) -->
+          <div class="card-surface p-6 lg:col-span-6 flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-3 mb-2">
+              <div class="flex items-center gap-3">
+                <div class="soft-icon-box w-9 h-9">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+                  </svg>
+                </div>
+                <h2 class="text-[17px] font-bold text-gray-900">Top Topics (From Customer Reviews)</h2>
+              </div>
+              <span id="selectedTopicBadge" class="text-xs font-semibold text-[#5b21ff] bg-[#f0edff] px-2.5 py-1 rounded-full hidden"></span>
+            </div>
+
+            <!-- Word Cloud Container matching visual layout of Image 2 -->
+            <div id="reportWordCloud" class="my-auto py-6 px-4 flex flex-col items-center justify-center select-none space-y-2">
+              <div class="flex flex-wrap items-baseline justify-center gap-x-8 gap-y-2">
+                <span onclick="filterByTopic('heating')" class="topic-word text-[17px] font-semibold text-[#7e6bc4]">heating</span>
+                <span onclick="filterByTopic('value for money')" class="topic-word text-[16px] font-semibold text-[#6e56bf]">value for money</span>
+                <span onclick="filterByTopic('design')" class="topic-word text-[19px] font-bold text-[#5b21ff]">design</span>
+              </div>
+              <div class="flex flex-wrap items-baseline justify-center gap-x-7 gap-y-1">
+                <span onclick="filterByTopic('price')" class="topic-word text-[21px] font-semibold text-[#7e6bc4]">price</span>
+                <span onclick="filterByTopic('performance')" class="topic-word text-[30px] font-extrabold text-[#5b21ff]">performance</span>
+                <span onclick="filterByTopic('build quality')" class="topic-word text-[19px] font-semibold text-[#7c63c9]">build quality</span>
+              </div>
+              <div class="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-1">
+                <span onclick="filterByTopic('camera')" class="topic-word text-[50px] font-extrabold text-[#4c14e8] leading-none tracking-tight">camera</span>
+              </div>
+              <div class="flex flex-wrap items-baseline justify-center gap-x-7 gap-y-1">
+                <span onclick="filterByTopic('charging')" class="topic-word text-[18px] font-semibold text-[#816ec7]">charging</span>
+                <span onclick="filterByTopic('battery')" class="topic-word text-[42px] font-extrabold text-[#5218fa] leading-none">battery</span>
+                <span onclick="filterByTopic('hardware')" class="topic-word text-[17px] font-medium text-[#8b79cc]">hardware</span>
+              </div>
+              <div class="flex flex-wrap items-baseline justify-center gap-x-10 gap-y-1 pt-1">
+                <span onclick="filterByTopic('software')" class="topic-word text-[18px] font-semibold text-[#7c68c4]">software</span>
+                <span onclick="filterByTopic('durability')" class="topic-word text-[19px] font-semibold text-[#7e69c7]">durability</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom 2-Column Row: Frequent Concerns & Report Summary -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Frequent Concerns (6 cols) -->
+          <div class="card-surface p-6 lg:col-span-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="soft-icon-box w-9 h-9">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <h2 class="text-[17px] font-bold text-gray-900">Frequent Concerns</h2>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-[#f4f3fb] text-gray-800 text-[13px] font-bold">
+                    <th class="py-2.5 px-4 rounded-l-xl">Topic</th>
+                    <th class="py-2.5 px-4">Mentions</th>
+                    <th class="py-2.5 px-4 rounded-r-xl text-center">Sentiment</th>
+                  </tr>
+                </thead>
+                <tbody id="reportConcernsTbody" class="divide-y divide-gray-100 text-[13.5px]">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Report Summary (6 cols) -->
+          <div class="card-surface p-6 lg:col-span-6 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="soft-icon-box w-9 h-9">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                </div>
+                <h2 class="text-[17px] font-bold text-gray-900">Report Summary</h2>
+              </div>
+
+              <div id="reportSummaryText" class="p-4 rounded-2xl bg-[#f4f2ff] text-gray-800 text-[14.5px] leading-relaxed font-medium mb-5">
+                Smartphone X received an overall positive response (68.4%). Customers highly appreciated the camera and build quality, while battery drain and heating were the most common concerns.
+              </div>
+            </div>
+
+            <!-- 3 Bottom Highlight Mini-Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              <div class="p-3.5 rounded-2xl border border-gray-200/80 bg-white flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-[#e8f8ee] text-[#16a34a] flex items-center justify-center shrink-0">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+                  </svg>
+                </div>
+                <div>
+                  <div id="reportSumPct" class="text-[18px] font-extrabold text-gray-900 leading-tight">68.4%</div>
+                  <div class="text-[11.5px] text-gray-600 font-medium">Overall Sentiment</div>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-2xl border border-gray-200/80 bg-white flex items-center gap-3">
+                <div class="soft-icon-box w-10 h-10 rounded-xl shrink-0">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>
+                  </svg>
+                </div>
+                <div>
+                  <div id="reportSumPraised" class="text-[16px] font-extrabold text-gray-900 leading-tight">Camera</div>
+                  <div class="text-[11.5px] text-gray-600 font-medium">Most Praised Aspect</div>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-2xl border border-gray-200/80 bg-white flex items-center gap-3">
+                <div class="soft-icon-box w-10 h-10 rounded-xl shrink-0">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="2" y="7" width="16" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/>
+                  </svg>
+                </div>
+                <div>
+                  <div id="reportSumConcern" class="text-[16px] font-extrabold text-gray-900 leading-tight">Battery</div>
+                  <div class="text-[11.5px] text-gray-600 font-medium">Major Concern</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- VIEW 7: MODEL EVALUATION (Matches Image 1)                -->
+      <!-- ========================================================= -->
+      <section id="view-evaluation" class="space-y-5 hidden">
+        <!-- Top Controls Bar: Task, Dataset, Run Evaluation -->
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div class="flex flex-wrap items-end gap-5">
+            <!-- Task -->
+            <div>
+              <label for="evalTaskSelect" class="block text-[12.5px] font-bold text-gray-800 mb-1">Task</label>
+              <div class="relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5b21ff]">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                </span>
+                <select id="evalTaskSelect" onchange="runModelEvaluationSuite()" class="pl-9 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-[13.5px] font-medium text-gray-800 shadow-sm focus:outline-none focus:border-[#5b21ff] min-w-[260px] appearance-none cursor-pointer">
+                  <option value="Sentiment Classification">Sentiment Classification</option>
+                  <option value="Aspect-Level Sentiment (ABSA)">Aspect-Level Sentiment (ABSA)</option>
+                </select>
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                </span>
+              </div>
+            </div>
+
+            <!-- Dataset -->
+            <div>
+              <label for="evalDatasetSelect" class="block text-[12.5px] font-bold text-gray-800 mb-1">Dataset</label>
+              <div class="relative">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5b21ff]">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                  </svg>
+                </span>
+                <select id="evalDatasetSelect" onchange="runModelEvaluationSuite()" class="pl-9 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-[13.5px] font-medium text-gray-800 shadow-sm focus:outline-none focus:border-[#5b21ff] min-w-[280px] appearance-none cursor-pointer">
+                  <option value="Product_Reviews (Test Set)">Product_Reviews (Test Set)</option>
+                  <option value="Electronics_Benchmark (2,048 samples)">Electronics_Benchmark (2,048 samples)</option>
+                  <option value="Cross_Domain_Holdout (v2)">Cross_Domain_Holdout (v2)</option>
+                </select>
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" onclick="runModelEvaluationSuite(true)" class="btn-primary-purple px-5 py-2.5 rounded-xl font-bold text-[13.5px] flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            <span>Run Evaluation</span>
+          </button>
+        </div>
+
+        <!-- 4 Evaluation Metric Cards: Accuracy, Precision, Recall, F1-Score -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="card-surface p-5 flex items-center gap-4">
+            <div class="soft-icon-box w-12 h-12 rounded-2xl shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+              </svg>
+            </div>
+            <div>
+              <div class="text-[13px] font-medium text-gray-600">Accuracy</div>
+              <div id="evalKpiAcc" class="text-[26px] font-extrabold text-gray-900 leading-tight">0.92</div>
+            </div>
+          </div>
+
+          <div class="card-surface p-5 flex items-center gap-4">
+            <div class="soft-icon-box w-12 h-12 rounded-2xl shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/>
+              </svg>
+            </div>
+            <div>
+              <div class="text-[13px] font-medium text-gray-600">Precision</div>
+              <div id="evalKpiPrec" class="text-[26px] font-extrabold text-gray-900 leading-tight">0.91</div>
+            </div>
+          </div>
+
+          <div class="card-surface p-5 flex items-center gap-4">
+            <div class="soft-icon-box w-12 h-12 rounded-2xl shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 20V10M12 20V4M6 20v-6"/>
+              </svg>
+            </div>
+            <div>
+              <div class="text-[13px] font-medium text-gray-600">Recall</div>
+              <div id="evalKpiRec" class="text-[26px] font-extrabold text-gray-900 leading-tight">0.92</div>
+            </div>
+          </div>
+
+          <div class="card-surface p-5 flex items-center gap-4">
+            <div class="soft-icon-box w-12 h-12 rounded-2xl shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><circle cx="13.5" cy="15.5" r="1.5"/><circle cx="8.5" cy="10.5" r="1.5"/>
+              </svg>
+            </div>
+            <div>
+              <div class="text-[13px] font-medium text-gray-600">F1-Score</div>
+              <div id="evalKpiF1" class="text-[26px] font-extrabold text-gray-900 leading-tight">0.91</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle Row: Model Comparison & Confusion Matrix -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Model Comparison Table (7 cols) -->
+          <div class="card-surface p-6 lg:col-span-7">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="soft-icon-box w-9 h-9">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 20V10M12 20V4M6 20v-6"/>
+                  </svg>
+                </div>
+                <h2 class="text-[17px] font-bold text-gray-900">Model Comparison</h2>
+              </div>
+              <span class="text-xs text-gray-500">Click any model row to inspect</span>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-[#f4f3fb] text-gray-800 text-[13px] font-bold">
+                    <th class="py-2.5 px-3 rounded-l-xl w-10"></th>
+                    <th class="py-2.5 px-3">Model</th>
+                    <th class="py-2.5 px-3 text-center">Accuracy &uarr;</th>
+                    <th class="py-2.5 px-3 text-center">Precision</th>
+                    <th class="py-2.5 px-3 text-center">Recall</th>
+                    <th class="py-2.5 px-3 rounded-r-xl text-center">F1-Score</th>
+                  </tr>
+                </thead>
+                <tbody id="evalModelTableBody" class="divide-y divide-gray-100 text-[13.5px]">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Confusion Matrix (5 cols) -->
+          <div class="card-surface p-6 lg:col-span-5 flex flex-col justify-between">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="soft-icon-box w-9 h-9">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+              </div>
+              <h2 id="evalMatrixTitle" class="text-[17px] font-bold text-gray-900">Confusion Matrix (DistilBERT)</h2>
+            </div>
+
+            <div class="flex items-center justify-center gap-4 my-auto">
+              <!-- Rotated Actual label -->
+              <div class="text-[12px] font-bold text-gray-700 -rotate-90 whitespace-nowrap select-none">Actual</div>
+
+              <!-- Matrix Grid -->
+              <div class="flex-1 max-w-[320px]">
+                <div id="confusionMatrixGrid" class="grid grid-cols-4 gap-1.5 items-center text-center text-[13px]">
+                  <!-- Populated by JS -->
+                </div>
+                <div class="text-center text-[12px] font-bold text-gray-700 mt-2 ml-12">Predicted</div>
+              </div>
+
+              <!-- Colorbar Legend -->
+              <div class="flex items-center gap-1.5 h-44 select-none">
+                <div class="w-3 h-full rounded-full bg-gradient-to-b from-[#4c14e8] via-[#9f7aea] to-[#f3f0ff]"></div>
+                <div class="flex flex-col justify-between h-full text-[10.5px] text-gray-600 font-medium">
+                  <span>1,000</span>
+                  <span>800</span>
+                  <span>600</span>
+                  <span>400</span>
+                  <span>200</span>
+                  <span>0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row: Class-wise Performance & Evaluation Insights -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Class-wise Performance (7 cols) -->
+          <div class="card-surface p-6 lg:col-span-7">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="soft-icon-box w-9 h-9">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </div>
+              <h2 id="evalClasswiseTitle" class="text-[17px] font-bold text-gray-900">Class-wise Performance (DistilBERT)</h2>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-[#f4f3fb] text-gray-800 text-[13px] font-bold">
+                    <th class="py-2.5 px-4 rounded-l-xl">Class</th>
+                    <th class="py-2.5 px-4 text-center">Precision</th>
+                    <th class="py-2.5 px-4 text-center">Recall</th>
+                    <th class="py-2.5 px-4 text-center">F1-Score</th>
+                    <th class="py-2.5 px-4 rounded-r-xl text-center">Support</th>
+                  </tr>
+                </thead>
+                <tbody id="evalClasswiseTbody" class="divide-y divide-gray-100 text-[13.5px]">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Evaluation Insights (5 cols) -->
+          <div class="card-surface p-6 lg:col-span-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="soft-icon-box w-9 h-9">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
+                    <path d="M9 18h6"/><path d="M10 22h4"/>
+                  </svg>
+                </div>
+                <h2 class="text-[17px] font-bold text-gray-900">Evaluation Insights</h2>
+              </div>
+
+              <div id="evalInsightsList" class="space-y-3.5 text-[14px] text-gray-800">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 1: ADD NEW CUSTOMER REVIEW TO QUEUE                 -->
+  <!-- ========================================================= -->
+  <div id="addReviewModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-900">Add Customer Review to Queue</h3>
+        <button type="button" onclick="closeAddReviewModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label for="newRevProduct" class="block text-xs font-bold text-gray-700 mb-1">Product</label>
+          <input id="newRevProduct" list="categorySuggestions" type="text" value="General"
+          placeholder="Type or select category (e.g., Headphones)"
+          class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13.5px] font-medium text-gray-800 focus:outline-none focus:border-[#5b21ff]" />
+         <datalist id="categorySuggestions">
+           <option value="General"></option>
+        </datalist>
+        </div>
+        <div>
+          <label for="newRevRating" class="block text-xs font-bold text-gray-700 mb-1">Customer Rating (1 - 5 Stars)</label>
+          <select id="newRevRating" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium">
+            <option value="5">5 Stars (Excellent)</option>
+            <option value="4" selected>4 Stars (Good)</option>
+            <option value="3">3 Stars (Average)</option>
+            <option value="2">2 Stars (Poor)</option>
+            <option value="1">1 Star (Terrible)</option>
+          </select>
+        </div>
+        <div>
+          <label for="newRevText" class="block text-xs font-bold text-gray-700 mb-1">Review Text</label>
+          <textarea id="newRevText" rows="3" class="w-full p-3 rounded-xl border border-gray-200 text-sm" placeholder="Enter customer feedback..."></textarea>
+        </div>
+        <div class="flex justify-end gap-2.5 pt-2">
+          <button type="button" onclick="closeAddReviewModal()" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50">Cancel</button>
+          <button type="button" onclick="submitNewReviewToQueue()" class="btn-primary-purple px-5 py-2 rounded-xl text-sm font-bold">Add to Queue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 2: REVIEW DETAIL INSPECTOR                          -->
+  <!-- ========================================================= -->
+  <div id="reviewDetailModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span id="detailModalId" class="px-2.5 py-1 rounded-lg bg-purple-100 text-[#5b21ff] font-bold text-xs">RV-1045</span>
+          <h3 id="detailModalProduct" class="text-lg font-bold text-gray-900">Smartphone X</h3>
+        </div>
+        <button type="button" onclick="closeReviewDetailModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+      </div>
+      <p id="detailModalText" class="p-4 rounded-xl bg-gray-50 text-gray-800 text-sm leading-relaxed mb-4"></p>
+      <div class="grid grid-cols-2 gap-3 text-xs mb-5">
+        <div class="p-3 rounded-xl border border-gray-100">
+          <span class="text-gray-500 block">Status</span>
+          <span id="detailModalStatus" class="font-bold text-sm text-gray-900 mt-0.5 block">Analyzed</span>
+        </div>
+        <div class="p-3 rounded-xl border border-gray-100">
+          <span class="text-gray-500 block">AI Sentiment</span>
+          <span id="detailModalSentiment" class="font-bold text-sm text-[#5b21ff] mt-0.5 block">Mixed (0.87)</span>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2.5">
+        <button type="button" onclick="closeReviewDetailModal()" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700">Close</button>
+        <button type="button" id="detailModalOpenInAnalyzerBtn" class="btn-primary-purple px-4 py-2 rounded-xl text-sm font-bold">Open in Sentiment Analyzer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 3: FEEDBACK TEAM WORKSPACE MODAL                    -->
+  <!-- ========================================================= -->
+  <div id="teamModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-900">Feedback Team Workspace</h3>
+        <button type="button" onclick="closeTeamModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+      </div>
+      <p class="text-xs text-gray-600 mb-4">Switch active intelligence team view or copy workspace summary.</p>
+      <div class="space-y-2.5 mb-5">
+        <button type="button" onclick="selectWorkspaceTeam('Feedback Team')" class="w-full p-3 rounded-xl border border-purple-200 bg-purple-50/60 flex items-center justify-between text-left">
+          <div>
+            <div class="font-bold text-sm text-gray-900">Feedback Team (Default)</div>
+            <div class="text-xs text-gray-500">Product Review Intelligence &bull; 12,840 reviews</div>
+          </div>
+          <span class="text-xs font-bold text-[#5b21ff]">Active</span>
+        </button>
+        <button type="button" onclick="selectWorkspaceTeam('ML Engineering Team')" class="w-full p-3 rounded-xl border border-gray-200 hover:bg-gray-50 flex items-center justify-between text-left">
+          <div>
+            <div class="font-bold text-sm text-gray-900">ML Engineering Team</div>
+            <div class="text-xs text-gray-500">DistilBERT &amp; ABSA Model Evaluation</div>
+          </div>
+          <span class="text-xs font-semibold text-gray-500">Switch</span>
+        </button>
+        <button type="button" onclick="selectWorkspaceTeam('Product QA Team')" class="w-full p-3 rounded-xl border border-gray-200 hover:bg-gray-50 flex items-center justify-between text-left">
+          <div>
+            <div class="font-bold text-sm text-gray-900">Product QA Team</div>
+            <div class="text-xs text-gray-500">Hardware &amp; Battery Defect Triage</div>
+          </div>
+          <span class="text-xs font-semibold text-gray-500">Switch</span>
+        </button>
+      </div>
+      <div class="flex justify-end">
+        <button type="button" onclick="closeTeamModal()" class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-xs font-bold text-gray-700">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 hidden bg-gray-900 text-white px-4 py-3 rounded-xl shadow-xl border border-gray-700 text-xs font-semibold items-center gap-2.5">
+    <span class="w-2 h-2 rounded-full bg-[#7c4dff]"></span>
+    <span id="toastMessage">Action completed</span>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- APPLICATION JAVASCRIPT & STATE                            -->
+  <!-- ========================================================= -->
+ <script>
+    const API_BASE = "http://127.0.0.1:8001";
+
+    // 1. Page Metadata
+    const PAGE_META = {
+      overview: {
+        title: 'Overview',
+        subtitle: 'A summarized view of customer feedback and sentiment insights.',
+        footer: 'Turn customer reviews into actionable insights.'
+      },
+      analyzer: {
+        title: 'Sentiment Analyzer',
+        subtitle: 'Analyze customer reviews using AI to get sentiment, aspect-level insights and key insights.',
+        footer: 'Analyze customer reviews, track product feedback, and generate insights.'
+      },
+      aspects: {
+        title: 'Aspect Analysis',
+        subtitle: 'Granular aspect-level sentiment breakdown across product features.',
+        footer: 'Turn customer reviews into actionable insights.'
+      },
+      inbox: {
+        title: 'Review Inbox',
+        subtitle: 'Browse, filter and analyze customer reviews from different products.',
+        footer: 'Analyze customer reviews, track product feedback, and generate insights.'
+      },
+      bulk: {
+        title: 'Bulk Analysis',
+        subtitle: 'Upload and process large customer review datasets in batch mode.',
+        footer: 'Analyze customer reviews, track product feedback, and generate insights.'
+      },
+      reports: {
+        title: 'Insights & Reports',
+        subtitle: 'Generate detailed analysis and downloadable reports from customer feedback.',
+        footer: 'Turn customer reviews into actionable insights.'
+      },
+      evaluation: {
+        title: 'Model Evaluation',
+        subtitle: 'Evaluate and compare ML models for sentiment and aspect-level analysis.',
+        footer: 'Evaluate and compare ML models for sentiment and aspect analysis.'
+      }
+    };
+
+    // 2. Live state populated from FastAPI + fallback product presets
+    let liveDashboardData = null;
+
+    const PRODUCT_DATA = {
+      'All Products': {
+        total: '0',
+        pos: 0,
+        neu: 0,
+        neg: 0,
+        praised: 'Quality',
+        concern: 'Price',
+        summary: 'Live summary computed from your SQLite review database.',
+        aspects: [],
+        concerns: [
+          { topic: 'Battery drain', mentions: 284, sentiment: 'Negative' },
+          { topic: 'Heating issue', mentions: 167, sentiment: 'Negative' },
+          { topic: 'Camera quality (low light)', mentions: 132, sentiment: 'Neutral' },
+          { topic: 'Software updates', mentions: 98, sentiment: 'Neutral' },
+          { topic: 'Build & durability', mentions: 76, sentiment: 'Positive' }
+        ]
+      },
+      'Smartphone X': {
+        total: '12,840', pos: 68.4, neu: 18.2, neg: 13.4, praised: 'Camera', concern: 'Battery',
+        summary: 'Smartphone X received an overall positive response (68.4%). Customers highly appreciated the camera and build quality, while battery drain and heating were the most common concerns.',
+        aspects: [
+          { name: 'Camera', icon: 'camera', pos: 78, neu: 12, neg: 10 },
+          { name: 'Battery', icon: 'battery', pos: 62, neu: 18, neg: 20 },
+          { name: 'Display', icon: 'display', pos: 71, neu: 17, neg: 12 },
+          { name: 'Performance', icon: 'performance', pos: 69, neu: 16, neg: 15 },
+          { name: 'Build Quality', icon: 'build', pos: 76, neu: 14, neg: 10 }
+        ],
+        concerns: [
+          { topic: 'Battery drain', mentions: 284, sentiment: 'Negative' },
+          { topic: 'Heating issue', mentions: 167, sentiment: 'Negative' },
+          { topic: 'Camera quality (low light)', mentions: 132, sentiment: 'Neutral' },
+          { topic: 'Software updates', mentions: 98, sentiment: 'Neutral' },
+          { topic: 'Build & durability', mentions: 76, sentiment: 'Positive' }
+        ]
+      },
+      'Wireless Headphones': {
+        total: '4,320', pos: 74.0, neu: 16.5, neg: 9.5, praised: 'Sound Stage', concern: 'Ear Comfort',
+        summary: 'Wireless Headphones achieved a 74.0% positive rating. Reviewers praised the bass clarity and active noise cancellation, while long-session ear cup warmth was the primary complaint.',
+        aspects: [
+          { name: 'Camera', icon: 'camera', pos: 70, neu: 20, neg: 10 },
+          { name: 'Battery', icon: 'battery', pos: 81, neu: 11, neg: 8 },
+          { name: 'Display', icon: 'display', pos: 68, neu: 22, neg: 10 },
+          { name: 'Performance', icon: 'performance', pos: 79, neu: 13, neg: 8 },
+          { name: 'Build Quality', icon: 'build', pos: 73, neu: 15, neg: 12 }
+        ],
+        concerns: [
+          { topic: 'Ear cushion warmth', mentions: 118, sentiment: 'Neutral' },
+          { topic: 'Bluetooth multipoint lag', mentions: 84, sentiment: 'Negative' },
+          { topic: 'Battery life (ANC on)', mentions: 69, sentiment: 'Positive' }
+        ]
+      },
+      'Laptop Pro': {
+        total: '3,190', pos: 64.2, neu: 19.8, neg: 16.0, praised: 'Performance', concern: 'Heating',
+        summary: 'Laptop Pro recorded 64.2% positive sentiment. Developers and creators loved the multi-core CPU speed and display accuracy, but flagged chassis heating under sustained loads.',
+        aspects: [
+          { name: 'Camera', icon: 'camera', pos: 64, neu: 21, neg: 15 },
+          { name: 'Battery', icon: 'battery', pos: 58, neu: 20, neg: 22 },
+          { name: 'Display', icon: 'display', pos: 84, neu: 10, neg: 6 },
+          { name: 'Performance', icon: 'performance', pos: 86, neu: 9, neg: 5 },
+          { name: 'Build Quality', icon: 'build', pos: 79, neu: 13, neg: 8 }
+        ],
+        concerns: [
+          { topic: 'Heating issue', mentions: 219, sentiment: 'Negative' },
+          { topic: 'Fan noise under load', mentions: 145, sentiment: 'Negative' },
+          { topic: 'Battery drain', mentions: 112, sentiment: 'Neutral' }
+        ]
+      }
+    };
+
+    // 3. Feedback Queue (Synced with SQLite + local pending queue)
+    let feedbackQueue = [];
+
+    // 4. Model Evaluation Data (Updated live from /api/evaluation)
+    const MODEL_BENCHMARKS = {
+      'DistilBERT (Ours)': {
+        shortName: 'DistilBERT',
+        acc: '0.92', prec: '0.91', rec: '0.92', f1: '0.91',
+        matrix: [[928, 47, 25], [36, 412, 38], [18, 40, 504]],
+        classes: [
+          { name: 'Positive', color: '#16a34a', prec: '0.94', rec: '0.93', f1: '0.94', support: '1,000' },
+          { name: 'Neutral',  color: '#eab308', prec: '0.88', rec: '0.89', f1: '0.88', support: '486' },
+          { name: 'Negative', color: '#ef4444', prec: '0.90', rec: '0.91', f1: '0.91', support: '562' }
+        ],
+        insights: [
+          'DistilBERT achieves the best overall performance on your local evaluation benchmark.',
+          'Runs locally on CPU via HuggingFace Transformers with cached weights.',
+          'Lightweight and suitable for real-time inference in FastAPI.'
+        ]
+      },
+      'BERT Base': {
+        shortName: 'BERT Base', acc: '0.90', prec: '0.89', rec: '0.90', f1: '0.90',
+        matrix: [[905, 58, 37], [44, 396, 46], [25, 48, 489]],
+        classes: [
+          { name: 'Positive', color: '#16a34a', prec: '0.93', rec: '0.91', f1: '0.92', support: '1,000' },
+          { name: 'Neutral',  color: '#eab308', prec: '0.85', rec: '0.86', f1: '0.85', support: '486' },
+          { name: 'Negative', color: '#ef4444', prec: '0.89', rec: '0.89', f1: '0.89', support: '562' }
+        ],
+        insights: ['BERT Base achieves strong 90% accuracy.', 'Higher latency than DistilBERT on CPU.']
+      },
+      'RoBERTa': {
+        shortName: 'RoBERTa', acc: '0.91', prec: '0.91', rec: '0.91', f1: '0.91',
+        matrix: [[918, 51, 31], [39, 406, 41], [21, 43, 498]],
+        classes: [
+          { name: 'Positive', color: '#16a34a', prec: '0.94', rec: '0.92', f1: '0.93', support: '1,000' },
+          { name: 'Neutral',  color: '#eab308', prec: '0.87', rec: '0.88', f1: '0.87', support: '486' },
+          { name: 'Negative', color: '#ef4444', prec: '0.90', rec: '0.90', f1: '0.90', support: '562' }
+        ],
+        insights: ['RoBERTa handles nuanced contrast clauses effectively.', 'Slightly heavier memory footprint than DistilBERT.']
+      },
+      'SVM (TF-IDF)': {
+        shortName: 'SVM (TF-IDF)', acc: '0.84', prec: '0.83', rec: '0.84', f1: '0.83',
+        matrix: [[852, 88, 60], [72, 348, 66], [49, 69, 444]],
+        classes: [
+          { name: 'Positive', color: '#16a34a', prec: '0.88', rec: '0.85', f1: '0.86', support: '1,000' },
+          { name: 'Neutral',  color: '#eab308', prec: '0.77', rec: '0.76', f1: '0.76', support: '486' },
+          { name: 'Negative', color: '#ef4444', prec: '0.83', rec: '0.82', f1: '0.82', support: '562' }
+        ],
+        insights: [
+          'Classical SVM with TF-IDF n-grams runs with ultra-low CPU latency.',
+          'Struggles with multi-clause reviews where positive and negative aspects co-occur.'
+        ]
+      },
+      'Logistic Regression': {
+        shortName: 'Logistic Regression', acc: '0.82', prec: '0.81', rec: '0.82', f1: '0.81',
+        matrix: [[834, 96, 70], [84, 332, 70], [58, 76, 428]],
+        classes: [
+          { name: 'Positive', color: '#16a34a', prec: '0.86', rec: '0.83', f1: '0.84', support: '1,000' },
+          { name: 'Neutral',  color: '#eab308', prec: '0.74', rec: '0.73', f1: '0.73', support: '486' },
+          { name: 'Negative', color: '#ef4444', prec: '0.80', rec: '0.80', f1: '0.80', support: '562' }
+        ],
+        insights: ['Logistic Regression baseline provides interpretable feature weights.']
+      }
+    };
+
+    let selectedEvalModel = 'DistilBERT (Ours)';
+    let activeTopicFilter = null;
+
+    // --- BACKEND API SYNC FUNCTIONS ---
+    function populateCategoryDropdowns(categories) {
+      const list = Array.isArray(categories) && categories.length ? categories : ['General'];
+
+      // 1. Overview filter dropdown (All Products + real DB categories)
+      const ovSel = document.getElementById('overviewCategorySelect');
+      if (ovSel) {
+        const current = ovSel.value || 'All Products';
+        ovSel.innerHTML = `<option value="All Products">All Products</option>` +
+          list.map(c => `<option value="${c}">${c}</option>`).join('');
+        ovSel.value = (current === 'All Products' || list.includes(current)) ? current : 'All Products';
+      }
+
+      // 2. Datalist suggestions for Sentiment Analyzer (allows typing new custom categories)
+      const dl = document.getElementById('categorySuggestions');
+      if (dl) {
+        dl.innerHTML = list.map(c => `<option value="${c}"></option>`).join('');
+      }
+
+      // 3. Aspect Analysis & Reports dropdowns synced with live DB categories
+      ['aspectViewProductSelect', 'reportProductSelect'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const prev = el.value;
+        el.innerHTML = `<option value="All Products">All Products</option>` +
+          list.map(c => `<option value="${c}">${c}</option>`).join('');
+        el.value = (prev === 'All Products' || list.includes(prev)) ? prev : 'All Products';
+      });
+    }
+
+    async function syncDashboardFromAPI(selectedCategory = null) {
+      try {
+        const ovSel = document.getElementById('overviewCategorySelect');
+        const cat = selectedCategory || (ovSel ? ovSel.value : 'All Products');
+        const url = (cat && cat !== 'All Products')
+          ? `${API_BASE}/api/dashboard?category=${encodeURIComponent(cat)}`
+          : `${API_BASE}/api/dashboard`;
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Dashboard fetch failed');
+        const data = await res.json();
+        liveDashboardData = data;
+
+        populateCategoryDropdowns(data.categories || []);
+
+        const total = data.total_reviews || 0;
+        const posCount = data.sentiment_counts?.Positive || 0;
+        const neuCount = data.sentiment_counts?.Neutral || 0;
+        const negCount = data.sentiment_counts?.Negative || 0;
+
+        const posPct = total ? (posCount / total) * 100 : 0;
+        const neuPct = total ? (neuCount / total) * 100 : 0;
+        const negPct = total ? (negCount / total) * 100 : 0;
+
+        const liveAspects = Object.entries(data.aspects_summary || {}).map(([name, counts]) => {
+          const sum = (counts.Positive || 0) + (counts.Neutral || 0) + (counts.Negative || 0) || 1;
+          const p = Math.round(((counts.Positive || 0) / sum) * 100);
+          const n = Math.round(((counts.Neutral || 0) / sum) * 100);
+          const neg = Math.max(0, 100 - p - n);
+          const iconMap = { Quality: 'build', Price: 'display', Delivery: 'performance', Support: 'camera', 'UI/UX': 'display', Performance: 'performance' };
+          return { name, icon: iconMap[name] || 'build', pos: p, neu: n, neg };
+        });
+
+        // Update KPIs & Donut directly from live SQLite response
+        document.getElementById('kpiTotalReviews').textContent = total.toLocaleString();
+        document.getElementById('kpiPosReviews').textContent = posPct.toFixed(1) + '%';
+        document.getElementById('kpiNeuReviews').textContent = neuPct.toFixed(1) + '%';
+        document.getElementById('kpiNegReviews').textContent = negPct.toFixed(1) + '%';
+
+        document.getElementById('donutCenterCount').textContent = total.toLocaleString();
+        document.getElementById('legendPosPct').textContent = posPct.toFixed(1) + '%';
+        document.getElementById('legendNeuPct').textContent = neuPct.toFixed(1) + '%';
+        document.getElementById('legendNegPct').textContent = negPct.toFixed(1) + '%';
+
+        const C = 289.02;
+        const posLen = (posPct / 100) * C;
+        const neuLen = (neuPct / 100) * C;
+        const negLen = (negPct / 100) * C;
+
+        document.getElementById('donutPosSeg').setAttribute('stroke-dasharray', `${posLen.toFixed(1)} ${C}`);
+        document.getElementById('donutPosSeg').setAttribute('stroke-dashoffset', '0');
+        document.getElementById('donutNeuSeg').setAttribute('stroke-dasharray', `${neuLen.toFixed(1)} ${C}`);
+        document.getElementById('donutNeuSeg').setAttribute('stroke-dashoffset', `${(-posLen).toFixed(1)}`);
+        document.getElementById('donutNegSeg').setAttribute('stroke-dasharray', `${negLen.toFixed(1)} ${C}`);
+        document.getElementById('donutNegSeg').setAttribute('stroke-dashoffset', `${(-(posLen + neuLen)).toFixed(1)}`);
+
+        if (liveAspects.length) {
+          renderAspectStackedBars('overviewAspectBarsContainer', liveAspects);
+        } else {
+          document.getElementById('overviewAspectBarsContainer').innerHTML =
+            `<div class="text-xs text-gray-500 py-4 text-center">No aspect mentions found for this category yet.</div>`;
+        }
+
+        renderOverviewRecentReviews(data.recent_reviews || []);
+
+        const pendingLocal = feedbackQueue.filter(i => i.status === 'Pending');
+        const dbItems = (data.recent_reviews || []).map(r => ({
+          id: `RV-${1000 + r.id}`,
+          product: r.category || r.customer_name || 'General',
+          icon: 'phone',
+          text: r.review_text,
+          preview: r.review_text.length > 42 ? r.review_text.slice(0, 42) + '...' : r.review_text,
+          rating: r.sentiment === 'Positive' ? 5 : (r.sentiment === 'Negative' ? 2 : 3),
+          status: 'Analyzed',
+          sentiment: `${r.sentiment} (${Number(r.confidence).toFixed(2)})`
+        }));
+        feedbackQueue = [...pendingLocal, ...dbItems];
+        renderFeedbackQueueTables();
+
+        // Keep Aspect Analysis & Reports synced with live data
+        PRODUCT_DATA[data.active_category] = {
+          total: total.toLocaleString(),
+          pos: posPct, neu: neuPct, neg: negPct,
+          praised: liveAspects.length ? liveAspects.slice().sort((a, b) => b.pos - a.pos)[0].name : 'N/A',
+          concern: liveAspects.length ? liveAspects.slice().sort((a, b) => b.neg - a.neg)[0].name : 'N/A',
+          summary: `${data.active_category} has ${total} analyzed reviews (${posPct.toFixed(1)}% positive, ${negPct.toFixed(1)}% negative) stored in SQLite.`,
+          aspects: liveAspects,
+          concerns: liveAspects.map(a => ({
+            topic: a.name,
+            mentions: (data.aspects_summary[a.name]?.Positive || 0) + (data.aspects_summary[a.name]?.Neutral || 0) + (data.aspects_summary[a.name]?.Negative || 0),
+            sentiment: a.neg > a.pos ? 'Negative' : (a.pos >= 60 ? 'Positive' : 'Neutral')
+          }))
+        };
+        renderAspectDeepDive();
+        generateInsightsReport(false);
+      } catch (err) {
+        showToast('API Offline — Start Uvicorn on port 8001');
+      }
+    }
+
+    function updateOverviewDashboard() {
+      const cat = document.getElementById('overviewCategorySelect')?.value || 'All Products';
+      syncDashboardFromAPI(cat);
+    }
+
+    async function syncEvaluationFromAPI() {
+      try {
+        const res = await fetch(`${API_BASE}/api/evaluation`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.models) return;
+
+        const hf = data.models['Transformer (HuggingFace)'];
+        const svm = data.models['TF-IDF + Linear SVM'];
+
+        if (hf) {
+          MODEL_BENCHMARKS['DistilBERT (Ours)'].acc = hf.accuracy.toFixed(2);
+          MODEL_BENCHMARKS['DistilBERT (Ours)'].prec = hf.precision.toFixed(2);
+          MODEL_BENCHMARKS['DistilBERT (Ours)'].rec = hf.recall.toFixed(2);
+          MODEL_BENCHMARKS['DistilBERT (Ours)'].f1 = hf.f1_score.toFixed(2);
+          MODEL_BENCHMARKS['DistilBERT (Ours)'].insights = [
+            `Live benchmark: ${(hf.accuracy * 100).toFixed(1)}% accuracy and ${hf.f1_score.toFixed(2)} F1-score on ${data.test_samples} test samples.`,
+            `Average local CPU inference latency: ${hf.avg_latency_ms} ms per review.`,
+            'Powered by your local HuggingFace Transformer pipeline.'
+          ];
+        }
+        if (svm) {
+          MODEL_BENCHMARKS['SVM (TF-IDF)'].acc = svm.accuracy.toFixed(2);
+          MODEL_BENCHMARKS['SVM (TF-IDF)'].prec = svm.precision.toFixed(2);
+          MODEL_BENCHMARKS['SVM (TF-IDF)'].rec = svm.recall.toFixed(2);
+          MODEL_BENCHMARKS['SVM (TF-IDF)'].f1 = svm.f1_score.toFixed(2);
+          MODEL_BENCHMARKS['SVM (TF-IDF)'].insights = [
+            `Live baseline: ${(svm.accuracy * 100).toFixed(1)}% accuracy and ${svm.f1_score.toFixed(2)} F1-score.`,
+            `Ultra-fast CPU latency: ${svm.avg_latency_ms} ms per review.`
+          ];
+        }
+        renderModelEvaluationView();
+      } catch (err) {
+        // Keep fallback metrics if offline
+      }
+    }
+
+    function renderOverviewRecentReviews(reviews) {
+      const container = document.getElementById('overviewRecentReviewsList');
+      if (!container || !reviews.length) return;
+      container.innerHTML = reviews.slice(0, 4).map(r => {
+        const badgeStyle = r.sentiment === 'Positive'
+          ? 'bg-[#dcfce7] text-[#15803d]'
+          : (r.sentiment === 'Negative' ? 'bg-[#fee2e2] text-[#b91c1c]' : 'bg-[#fef3c7] text-[#b45309]');
+        const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
+        return `
+          <div class="py-3.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-[140px]">
+              ${getProductIconSvg('phone')}
+              <span class="font-bold text-[13.5px] text-gray-900 truncate max-w-[120px]">${r.customer_name || 'Anonymous'}</span>
+            </div>
+            <p class="text-[13px] text-gray-700 flex-1 line-clamp-2">“${r.review_text}”</p>
+            <span class="px-3 py-1 rounded-full text-[12px] font-bold ${badgeStyle} shrink-0">${r.sentiment}</span>
+            <span class="text-[12.5px] text-gray-500 font-medium shrink-0">${dateStr}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- LIVE SENTIMENT ANALYZER (Calls POST /api/analyze) ---
+    async function runSingleReviewAnalysis() {
+      const rawText = document.getElementById('reviewInputText').value.trim();
+      if (!rawText) {
+        showToast('Please enter a customer review to analyze.');
+        return;
+      }
+
+      const category = document.getElementById('analyzerCategorySelect').value || 'Customer';
+      showToast('Running live Transformer inference...');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+             customer_name: 'Web User',
+             category: category,
+             review_text: rawText
+          })
+        });
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+
+        const overall = data.sentiment || 'Neutral';
+        const conf = Number(data.confidence || 0.85);
+        const pct = Math.round(conf * 100);
+
+        // Timestamp
+        document.getElementById('analysisTimestamp').textContent =
+          'Analyzed on: ' + new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        // Overall Badge
+        const badge = document.getElementById('resultOverallBadge');
+        badge.textContent = overall;
+        if (overall === 'Positive') {
+          badge.className = 'inline-block px-4 py-1 rounded-xl text-[18px] font-extrabold bg-[#dcfce7] text-[#15803d]';
+        } else if (overall === 'Negative') {
+          badge.className = 'inline-block px-4 py-1 rounded-xl text-[18px] font-extrabold bg-[#fee2e2] text-[#b91c1c]';
+        } else {
+          badge.className = 'inline-block px-4 py-1 rounded-xl text-[18px] font-extrabold bg-[#e4dcff] text-[#5b21ff]';
+        }
+
+        // Confidence & Ring
+        document.getElementById('resultConfidenceNum').textContent = conf.toFixed(2);
+        document.getElementById('resultConfidenceBar').style.width = pct + '%';
+        document.getElementById('probRingPct').textContent = pct + '%';
+
+        const ringC = 238.76;
+        document.getElementById('probRingCircle').setAttribute('stroke-dasharray', `${(conf * ringC).toFixed(1)} ${ringC}`);
+
+        const rem = Math.max(0, 1 - conf);
+        document.getElementById('probPosVal').textContent = (overall === 'Positive' ? conf : rem / 2).toFixed(2);
+        document.getElementById('probNegVal').textContent = (overall === 'Negative' ? conf : rem / 2).toFixed(2);
+        document.getElementById('probMixedVal').textContent = (overall === 'Neutral' ? conf : rem / 2).toFixed(2);
+
+        // Render Extracted Aspects
+        const aspects = data.aspects || [];
+        if (aspects.length > 0) {
+          document.getElementById('resultAspectList').innerHTML = aspects.map(a => {
+            const isPos = a.sentiment === 'Positive';
+            return `
+              <div class="flex items-center justify-between p-2 rounded-xl bg-gray-50/80">
+                <div class="flex items-center gap-2.5">
+                  <span class="soft-icon-box w-8 h-8 rounded-lg">${getAspectIconSvg('build')}</span>
+                  <span class="font-bold text-[13.5px] text-gray-900">${a.aspect}</span>
+                </div>
+                <span class="px-3 py-1 rounded-lg ${isPos ? 'bg-[#e8f8ee] text-[#15803d]' : 'bg-[#feeceb] text-[#b91c1c]'} font-bold text-[12.5px] flex items-center gap-1">
+                  <span>${isPos ? '&#10003;' : '&#10005;'}</span> ${a.sentiment}
+                </span>
+              </div>
+            `;
+          }).join('');
+
+          document.getElementById('resultKeyPhrases').innerHTML = aspects.map(a => {
+            const isPos = a.sentiment === 'Positive';
+            return `
+              <div class="px-3.5 py-2 rounded-xl ${isPos ? 'bg-[#eefaf2]' : 'bg-[#fef1f1]'} text-gray-900 flex items-center gap-2.5">
+                <span class="w-5 h-5 rounded-full ${isPos ? 'bg-[#bbf7d0] text-[#15803d]' : 'bg-[#fecaca] text-[#b91c1c]'} flex items-center justify-center text-xs font-bold shrink-0">${isPos ? '&#10003;' : '&#10005;'}</span>
+                <span class="font-semibold"><strong>${a.aspect}:</strong> “${a.snippet}”</span>
+              </div>
+            `;
+          }).join('');
+        } else {
+          document.getElementById('resultAspectList').innerHTML =
+            `<div class="text-xs text-gray-500 p-2">No specific product aspects matched in this review.</div>`;
+          document.getElementById('resultKeyPhrases').innerHTML =
+            `<div class="px-3.5 py-2 rounded-xl bg-gray-50 text-gray-700 text-xs font-medium">Overall review scored as <strong>${overall}</strong> (${pct}% confidence).</div>`;
+        }
+
+        showToast(`Saved to SQLite (#${data.id}) — ${overall} (${pct}%)`);
+        await syncDashboardFromAPI();
+      } catch (err) {
+        showToast('Could not reach FastAPI on :8001. Is Uvicorn running?');
+      }
+    }
+
+    // --- UI HELPERS & NAVIGATION ---
+    function getAspectIconSvg(type) {
+      if (type === 'camera') return `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>`;
+      if (type === 'battery') return `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="16" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/></svg>`;
+      if (type === 'display') return `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
+      if (type === 'performance') return `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>`;
+      return `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/></svg>`;
+    }
+
+    function getProductIconSvg(iconType) {
+      if (iconType === 'headphones') return `<div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></div>`;
+      if (iconType === 'laptop') return `<div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg></div>`;
+      return `<div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>`;
+    }
+
+    function renderAspectStackedBars(containerId, aspectsArray) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = aspectsArray.map(item => `
+        <div class="flex items-center gap-3.5">
+          <div class="flex items-center gap-2.5 w-36 shrink-0">
+            <span class="soft-icon-box w-8 h-8 rounded-lg shrink-0">${getAspectIconSvg(item.icon)}</span>
+            <span class="text-[13.5px] font-semibold text-gray-800">${item.name}</span>
+          </div>
+          <div class="aspect-bar-track flex-1">
+            <div class="aspect-seg-pos" style="width: ${item.pos}%">${item.pos > 8 ? item.pos + '%' : ''}</div>
+            <div class="aspect-seg-neu" style="width: ${item.neu}%">${item.neu > 8 ? item.neu + '%' : ''}</div>
+            <div class="aspect-seg-neg" style="width: ${item.neg}%">${item.neg > 8 ? item.neg + '%' : ''}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function switchTab(tabKey) {
+      const allTabs = ['overview', 'analyzer', 'aspects', 'inbox', 'bulk', 'reports', 'evaluation'];
+      allTabs.forEach(k => {
+        const sec = document.getElementById('view-' + k);
+        const nav = document.getElementById('nav-' + k);
+        if (sec) sec.classList.toggle('hidden', k !== tabKey);
+        if (nav) nav.classList.toggle('active', k === tabKey);
+      });
+
+      const meta = PAGE_META[tabKey] || PAGE_META.overview;
+      document.getElementById('pageHeaderTitle').textContent = meta.title;
+      document.getElementById('pageHeaderSubtitle').textContent = meta.subtitle;
+      document.getElementById('sidebarFooterDesc').textContent = meta.footer;
+
+      const sidebar = document.getElementById('appSidebar');
+      const backdrop = document.getElementById('mobileBackdrop');
+      if (sidebar && !sidebar.classList.contains('-translate-x-full') && window.innerWidth < 1024) {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    function toggleMobileSidebar() {
+      document.getElementById('appSidebar').classList.toggle('-translate-x-full');
+      document.getElementById('mobileBackdrop').classList.toggle('hidden');
+    }
+
+    function updateOverviewDashboard() {
+      const cat = document.getElementById('overviewCategorySelect').value;
+      const data = PRODUCT_DATA[cat] || PRODUCT_DATA['All Products'];
+
+      document.getElementById('kpiTotalReviews').textContent = data.total;
+      document.getElementById('kpiPosReviews').textContent = data.pos.toFixed(1) + '%';
+      document.getElementById('kpiNeuReviews').textContent = data.neu.toFixed(1) + '%';
+      document.getElementById('kpiNegReviews').textContent = data.neg.toFixed(1) + '%';
+
+      document.getElementById('donutCenterCount').textContent = data.total;
+      document.getElementById('legendPosPct').textContent = data.pos.toFixed(1) + '%';
+      document.getElementById('legendNeuPct').textContent = data.neu.toFixed(1) + '%';
+      document.getElementById('legendNegPct').textContent = data.neg.toFixed(1) + '%';
+
+      const C = 289.02;
+      const posLen = (data.pos / 100) * C;
+      const neuLen = (data.neu / 100) * C;
+      const negLen = (data.neg / 100) * C;
+
+      document.getElementById('donutPosSeg').setAttribute('stroke-dasharray', `${posLen.toFixed(1)} ${C}`);
+      document.getElementById('donutPosSeg').setAttribute('stroke-dashoffset', '0');
+      document.getElementById('donutNeuSeg').setAttribute('stroke-dasharray', `${neuLen.toFixed(1)} ${C}`);
+      document.getElementById('donutNeuSeg').setAttribute('stroke-dashoffset', `${(-posLen).toFixed(1)}`);
+      document.getElementById('donutNegSeg').setAttribute('stroke-dasharray', `${negLen.toFixed(1)} ${C}`);
+      document.getElementById('donutNegSeg').setAttribute('stroke-dashoffset', `${(-(posLen + neuLen)).toFixed(1)}`);
+
+      renderAspectStackedBars('overviewAspectBarsContainer', data.aspects);
+    }
+
+    function switchAnalyzerSource(mode) {
+      const modes = { single: 'srcTabSingle', upload: 'srcTabUpload', dataset: 'srcTabDataset' };
+      Object.entries(modes).forEach(([k, id]) => {
+        const btn = document.getElementById(id);
+        btn.className = k === mode
+          ? 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-[13.5px] font-semibold bg-[#5b21ff] text-white shadow-sm transition'
+          : 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-[13.5px] font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition';
+      });
+      document.getElementById('analyzerUploadHelper').classList.toggle('hidden', mode !== 'upload');
+      document.getElementById('analyzerDatasetHelper').classList.toggle('hidden', mode !== 'dataset');
+    }
+
+    function loadPresetReview(text) {
+      document.getElementById('reviewInputText').value = text;
+      updateCharCount();
+      runSingleReviewAnalysis();
+    }
+
+    function setUploadValidationStatus(type, message) {
+      const box = document.getElementById('uploadValidationMsg');
+      if (!box) return;
+      box.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border-red-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+      box.classList.add('border');
+      if (type === 'error') {
+        box.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+      } else {
+        box.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+      }
+      box.textContent = message;
+    }
+
+    function handleSingleFileUpload(event) {
+      const input = event.target;
+      const file = input.files && input.files[0];
+      if (!file) return;
+
+      const ALLOWED_EXTS = ['txt', 'csv', 'json'];
+      const MAX_BYTES = 1 * 1024 * 1024; // 1 MB
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+
+      // 1. Extension check
+      if (!ALLOWED_EXTS.includes(ext)) {
+        setUploadValidationStatus('error', `Invalid file type (.${ext || 'unknown'}). Only .txt, .csv, or .json documents are allowed.`);
+        showToast('Upload rejected: unsupported file type');
+        input.value = '';
+        return;
+      }
+
+      // 2. Empty & max size check
+      if (file.size === 0) {
+        setUploadValidationStatus('error', `File "${file.name}" is empty (0 bytes).`);
+        showToast('Upload rejected: empty file');
+        input.value = '';
+        return;
+      }
+      if (file.size > MAX_BYTES) {
+        setUploadValidationStatus('error', `File too large (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maximum allowed size is 1 MB.`);
+        showToast('Upload rejected: file exceeds 1 MB');
+        input.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onerror = () => {
+        setUploadValidationStatus('error', 'Failed to read file. Make sure it is a valid UTF-8 text document.');
+        input.value = '';
+      };
+
+      reader.onload = function(e) {
+        const raw = String(e.target.result || '');
+
+        // 3. Binary / renamed-file detection (null bytes or excessive control chars)
+        const controlMatches = raw.match(/[\x00-\x08\x0E-\x1F]/g) || [];
+        if (raw.includes('\u0000') || controlMatches.length > raw.length * 0.05) {
+          setUploadValidationStatus('error', `Rejected "${file.name}": file appears to contain binary/non-text data.`);
+          showToast('Upload rejected: binary file detected');
+          input.value = '';
+          return;
+        }
+
+        let extractedReview = '';
+
+        // 4. Format-specific schema validation
+        if (ext === 'json') {
+          try {
+            const parsed = JSON.parse(raw);
+            const firstObj = Array.isArray(parsed) ? parsed[0] : parsed;
+            if (typeof firstObj === 'string') {
+              extractedReview = firstObj.trim();
+            } else if (firstObj && typeof firstObj === 'object') {
+              const candidate = firstObj.review_text || firstObj.review || firstObj.text || firstObj.comment;
+              if (typeof candidate !== 'string' || !candidate.trim()) {
+                setUploadValidationStatus('error', 'Invalid JSON schema: expected a "review_text", "review", or "text" string field.');
+                input.value = '';
+                return;
+              }
+              extractedReview = candidate.trim();
+            } else {
+              setUploadValidationStatus('error', 'Invalid JSON content: expected a review string or object.');
+              input.value = '';
+              return;
+            }
+          } catch (err) {
+            setUploadValidationStatus('error', `Malformed JSON file: ${err.message}`);
+            input.value = '';
+            return;
+          }
+        } else if (ext === 'csv') {
+          const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+          if (lines.length === 0) {
+            setUploadValidationStatus('error', 'CSV file has no readable rows.');
+            input.value = '';
+            return;
+          }
+          const headers = lines[0].toLowerCase().split(',').map(h => h.replace(/^"|"$/g, '').trim());
+          const textColIdx = headers.findIndex(h => ['review_text', 'review', 'text', 'comment', 'feedback'].includes(h));
+          if (textColIdx !== -1) {
+            if (lines.length < 2) {
+              setUploadValidationStatus('error', 'CSV contains only a header row and no review data.');
+              input.value = '';
+              return;
+            }
+            const firstRowCols = lines[1].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+            extractedReview = firstRowCols[textColIdx] || '';
+          } else {
+            extractedReview = lines[0].replace(/^"|"$/g, '').trim();
+          }
+        } else {
+          // .txt
+          extractedReview = raw.trim();
+        }
+
+        // 5. Meaningful text check
+        if (extractedReview.length < 5 || !/[a-zA-Z]{2,}/.test(extractedReview)) {
+          setUploadValidationStatus('error', 'Document does not contain a valid readable review (minimum 5 characters with words).');
+          input.value = '';
+          return;
+        }
+
+        const wasTruncated = extractedReview.length > 500;
+        const finalText = extractedReview.slice(0, 500);
+
+        document.getElementById('reviewInputText').value = finalText;
+        updateCharCount();
+        setUploadValidationStatus(
+          'success',
+          `Validated "${file.name}" (${(file.size / 1024).toFixed(1)} KB)${wasTruncated ? ' — trimmed to 500 chars.' : ' — ready & analyzing.'}`
+        );
+        input.value = '';
+        runSingleReviewAnalysis();
+      };
+
+      reader.readAsText(file);
+    }
+
+    function updateCharCount() {
+      const val = document.getElementById('reviewInputText').value || '';
+      document.getElementById('reviewCharCount').textContent = `${val.length} / 500`;
+    }
+
+    function renderStarsHtml(rating) {
+      let stars = '';
+      for (let i = 1; i <= 5; i++) {
+        stars += i <= rating ? `<span class="text-[#facc15] text-[15px]">&#9733;</span>` : `<span class="text-gray-300 text-[15px]">&#9733;</span>`;
+      }
+      return `<div class="flex items-center gap-1">${stars}<span class="text-gray-600 font-semibold text-xs ml-1">(${rating})</span></div>`;
+    }
+
+    function renderFeedbackQueueTables() {
+      const searchQ = (document.getElementById('queueSearchInput')?.value || '').toLowerCase();
+      const statusF = document.getElementById('queueStatusFilter')?.value || 'ALL';
+
+      const filtered = feedbackQueue.filter(item => {
+        const matchSearch = item.id.toLowerCase().includes(searchQ) || item.product.toLowerCase().includes(searchQ) || item.text.toLowerCase().includes(searchQ);
+        const matchStatus = statusF === 'ALL' || item.status === statusF;
+        return matchSearch && matchStatus;
+      });
+
+      const tbodyAnalyzer = document.getElementById('analyzerQueueTbody');
+      if (tbodyAnalyzer) {
+        tbodyAnalyzer.innerHTML = filtered.slice(0, 10).map(item => {
+          const isAnalyzed = item.status === 'Analyzed';
+          return `
+            <tr class="hover:bg-purple-50/30 transition">
+              <td class="py-3.5 px-4"><input type="checkbox" class="queue-row-check w-4 h-4 rounded border-gray-300 text-[#5b21ff]" /></td>
+              <td class="py-3.5 px-3 font-bold text-gray-900">${item.id}</td>
+              <td class="py-3.5 px-3"><div class="flex items-center gap-2.5">${getProductIconSvg(item.icon)}<span class="font-bold text-gray-900">${item.product}</span></div></td>
+              <td class="py-3.5 px-3 text-gray-700">${item.preview}</td>
+              <td class="py-3.5 px-3">${renderStarsHtml(item.rating)}</td>
+              <td class="py-3.5 px-3"><span class="px-3 py-1 rounded-full text-xs font-bold ${isAnalyzed ? 'bg-[#dcfce7] text-[#15803d]' : 'bg-[#fef3c7] text-[#b45309]'}">${item.status}</span></td>
+              <td class="py-3.5 px-4">
+                <div class="flex items-center justify-center gap-2.5">
+                  ${isAnalyzed ? `
+                    <button type="button" onclick="inspectQueueItem('${item.id}')" class="p-1.5 rounded-lg text-[#5b21ff] hover:bg-purple-50" title="View Review Details">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  ` : `
+                    <button type="button" onclick="analyzeQueueRow('${item.id}')" class="px-3.5 py-1.5 rounded-lg bg-[#5b21ff] hover:bg-[#4a16e0] text-white flex items-center justify-center shadow-xs transition" title="Run AI Analysis Now">
+                      <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    </button>
+                  `}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      const fullInbox = document.getElementById('fullInboxTbody');
+      if (fullInbox) {
+        fullInbox.innerHTML = feedbackQueue.map(item => {
+          const isAnalyzed = item.status === 'Analyzed';
+          return `
+            <tr class="hover:bg-purple-50/30 transition">
+              <td class="py-3.5 px-4 font-bold text-gray-900">${item.id}</td>
+              <td class="py-3.5 px-3"><div class="flex items-center gap-2.5">${getProductIconSvg(item.icon)}<span class="font-bold text-gray-900">${item.product}</span></div></td>
+              <td class="py-3.5 px-3 text-gray-700 max-w-md">${item.text}</td>
+              <td class="py-3.5 px-3">${renderStarsHtml(item.rating)}</td>
+              <td class="py-3.5 px-3"><span class="px-3 py-1 rounded-full text-xs font-bold ${isAnalyzed ? 'bg-[#dcfce7] text-[#15803d]' : 'bg-[#fef3c7] text-[#b45309]'}">${item.status}</span></td>
+              <td class="py-3.5 px-4 text-center">
+                <button type="button" onclick="loadQueueItemIntoAnalyzer('${item.id}')" class="px-3 py-1.5 rounded-lg bg-[#f0edff] hover:bg-[#e4dcff] text-[#5b21ff] text-xs font-bold">
+                  ${isAnalyzed ? 'Re-Analyze' : 'Analyze Now'}
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      const pendingCount = feedbackQueue.filter(i => i.status === 'Pending').length;
+      const badge = document.getElementById('sidebarPendingBadge');
+      if (badge) badge.textContent = String(pendingCount);
+    }
+
+    async function analyzeQueueRow(reviewId) {
+      const item = feedbackQueue.find(r => r.id === reviewId);
+      if (!item) return;
+      feedbackQueue = feedbackQueue.filter(r => r.id !== reviewId);
+      document.getElementById('reviewInputText').value = item.text;
+      updateCharCount();
+      await runSingleReviewAnalysis();
+    }
+
+    function loadQueueItemIntoAnalyzer(reviewId) {
+      const item = feedbackQueue.find(r => r.id === reviewId);
+      if (!item) return;
+      switchTab('analyzer');
+      document.getElementById('reviewInputText').value = item.text;
+      updateCharCount();
+      runSingleReviewAnalysis();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function inspectQueueItem(reviewId) {
+      const item = feedbackQueue.find(r => r.id === reviewId);
+      if (!item) return;
+      document.getElementById('detailModalId').textContent = item.id;
+      document.getElementById('detailModalProduct').textContent = item.product;
+      document.getElementById('detailModalText').textContent = item.text;
+      document.getElementById('detailModalStatus').textContent = item.status;
+      document.getElementById('detailModalSentiment').textContent = item.sentiment;
+      document.getElementById('detailModalOpenInAnalyzerBtn').onclick = () => {
+        closeReviewDetailModal();
+        loadQueueItemIntoAnalyzer(item.id);
+      };
+      const modal = document.getElementById('reviewDetailModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeReviewDetailModal() {
+      const modal = document.getElementById('reviewDetailModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function analyzeAllPendingReviews() {
+      const pending = feedbackQueue.filter(i => i.status === 'Pending');
+      for (const item of pending) {
+        await fetch(`${API_BASE}/api/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customer_name: item.product, review_text: item.text })
+        });
+      }
+      feedbackQueue = feedbackQueue.filter(i => i.status !== 'Pending');
+      await syncDashboardFromAPI();
+      showToast('All pending reviews analyzed and saved to SQLite!');
+    }
+
+    function toggleQueueFilterBar() { document.getElementById('queueFilterBar').classList.toggle('hidden'); }
+    function toggleSelectAllQueue(cb) { document.querySelectorAll('.queue-row-check').forEach(x => x.checked = cb.checked); }
+    function openAddReviewModal() { const m = document.getElementById('addReviewModal'); m.classList.remove('hidden'); m.classList.add('flex'); }
+    function closeAddReviewModal() { const m = document.getElementById('addReviewModal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+
+    function submitNewReviewToQueue() {
+      const product = document.getElementById('newRevProduct').value;
+      const rating = parseInt(document.getElementById('newRevRating').value, 10) || 4;
+      const text = document.getElementById('newRevText').value.trim();
+      if (!text) return showToast('Please enter review text first.');
+      const nextNum = 2000 + feedbackQueue.length;
+      const icon = product.includes('Phone') ? 'phone' : (product.includes('Headphones') ? 'headphones' : 'laptop');
+      feedbackQueue.unshift({
+        id: 'RV-' + nextNum, product, icon, text,
+        preview: text.length > 38 ? text.slice(0, 38) + '...' : text,
+        rating, status: 'Pending', sentiment: 'Pending'
+      });
+      document.getElementById('newRevText').value = '';
+      closeAddReviewModal();
+      renderFeedbackQueueTables();
+      showToast(`Added RV-${nextNum} to Pending Queue`);
+    }
+
+    function renderAspectDeepDive() {
+      const prod = document.getElementById('aspectViewProductSelect').value;
+      const data = PRODUCT_DATA[prod] || PRODUCT_DATA['Smartphone X'];
+      document.getElementById('aspectDeepDiveCards').innerHTML = data.aspects.map(a => `
+        <div class="p-5 rounded-2xl border border-gray-200/80 bg-[#fbfbfe] flex flex-col justify-between space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <span class="soft-icon-box w-9 h-9 rounded-xl">${getAspectIconSvg(a.icon)}</span>
+              <span class="font-bold text-base text-gray-900">${a.name}</span>
+            </div>
+            <span class="text-xs font-bold px-2.5 py-1 rounded-full ${a.pos >= 70 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${a.pos}% Positive</span>
+          </div>
+          <div class="aspect-bar-track">
+            <div class="aspect-seg-pos" style="width:${a.pos}%">${a.pos}%</div>
+            <div class="aspect-seg-neu" style="width:${a.neu}%">${a.neu}%</div>
+            <div class="aspect-seg-neg" style="width:${a.neg}%">${a.neg}%</div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-600 font-medium">
+            <span>Positive: <strong>${a.pos}%</strong></span>
+            <span>Neutral: <strong>${a.neu}%</strong></span>
+            <span>Negative: <strong>${a.neg}%</strong></span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function generateInsightsReport(withToast = false) {
+      const prod = document.getElementById('reportProductSelect').value;
+      const data = PRODUCT_DATA[prod] || PRODUCT_DATA['Smartphone X'];
+      document.getElementById('reportAspectCardTitle').textContent = `Aspect-wise Sentiment (${prod})`;
+      renderAspectStackedBars('reportAspectBarsContainer', data.aspects);
+
+      document.getElementById('reportConcernsTbody').innerHTML = data.concerns.map(c => {
+        let badgeClass = c.sentiment === 'Negative' ? 'bg-[#fee2e2] text-[#b91c1c]' : (c.sentiment === 'Neutral' ? 'bg-[#fef3c7] text-[#b45309]' : 'bg-[#dcfce7] text-[#15803d]');
+        const isHighlighted = activeTopicFilter && c.topic.toLowerCase().includes(activeTopicFilter.toLowerCase());
+        return `
+          <tr class="${isHighlighted ? 'bg-purple-50 font-semibold' : 'hover:bg-gray-50/80'} transition">
+            <td class="py-3 px-4 font-medium text-gray-900">${c.topic}</td>
+            <td class="py-3 px-4 font-semibold text-gray-800">${c.mentions}</td>
+            <td class="py-3 px-4 text-center"><span class="inline-block px-3.5 py-1 rounded-full text-[12px] font-bold ${badgeClass}">${c.sentiment}</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('reportSummaryText').textContent = data.summary;
+      document.getElementById('reportSumPct').textContent = data.pos.toFixed(1) + '%';
+      document.getElementById('reportSumPraised').textContent = data.praised;
+      document.getElementById('reportSumConcern').textContent = data.concern;
+      if (withToast) showToast(`Generated report for ${prod}`);
+    }
+
+    function filterByTopic(topic) {
+      activeTopicFilter = activeTopicFilter === topic ? null : topic;
+      document.querySelectorAll('.topic-word').forEach(el => el.classList.toggle('selected-topic', el.textContent.trim() === activeTopicFilter));
+      const badge = document.getElementById('selectedTopicBadge');
+      if (activeTopicFilter) { badge.textContent = `Topic: "${activeTopicFilter}"`; badge.classList.remove('hidden'); }
+      else { badge.classList.add('hidden'); }
+      generateInsightsReport();
+    }
+
+    function exportReportData() {
+      const prod = document.getElementById('reportProductSelect')?.value || 'Smartphone X';
+      const data = PRODUCT_DATA[prod] || PRODUCT_DATA['Smartphone X'];
+      const rows = [['Aspect', 'Positive (%)', 'Neutral (%)', 'Negative (%)'], ...data.aspects.map(a => [a.name, a.pos, a.neu, a.neg])];
+      const link = document.createElement('a');
+      link.setAttribute('href', encodeURI('data:text/csv;charset=utf-8,' + rows.map(r => r.join(',')).join('\n')));
+      link.setAttribute('download', `Insightify_${prod.replace(/\s+/g, '_')}_Report.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast(`Exported ${prod} report as CSV`);
+    }
+
+    function handleBulkFileSelect(e) {
+      const file = e.target.files && e.target.files[0];
+      if (file) { document.getElementById('bulkStatusPill').textContent = `Loaded ${file.name}`; showToast(`Selected ${file.name}`); }
+    }
+    function runBulkAnalysisSimulation() {
+      const preset = document.getElementById('bulkPresetSelect').value;
+      document.getElementById('bulkStatusPill').textContent = `Completed • ${preset}`;
+      showToast(`Batch inference completed for ${preset}`);
+    }
+
+    function selectEvaluationModel(modelName) { selectedEvalModel = modelName; renderModelEvaluationView(); }
+    function runModelEvaluationSuite(notify = false) {
+      syncEvaluationFromAPI();
+      if (notify) showToast(`Loaded live evaluation metrics from /api/evaluation`);
+    }
+
+    function renderModelEvaluationView() {
+      const m = MODEL_BENCHMARKS[selectedEvalModel] || MODEL_BENCHMARKS['DistilBERT (Ours)'];
+      document.getElementById('evalKpiAcc').textContent = m.acc;
+      document.getElementById('evalKpiPrec').textContent = m.prec;
+      document.getElementById('evalKpiRec').textContent = m.rec;
+      document.getElementById('evalKpiF1').textContent = m.f1;
+
+      const modelOrder = ['DistilBERT (Ours)', 'BERT Base', 'RoBERTa', 'SVM (TF-IDF)', 'Logistic Regression'];
+      document.getElementById('evalModelTableBody').innerHTML = modelOrder.map(name => {
+        const row = MODEL_BENCHMARKS[name];
+        const isSelected = name === selectedEvalModel;
+        return `
+          <tr onclick="selectEvaluationModel('${name}')" class="cursor-pointer transition ${isSelected ? 'bg-[#ede9fe]/90 font-bold text-gray-900' : 'hover:bg-gray-50 text-gray-800'}">
+            <td class="py-3 px-3 text-center"><span class="w-4 h-4 rounded-full inline-flex items-center justify-center border ${isSelected ? 'border-[#5b21ff] bg-[#5b21ff]' : 'border-gray-400 bg-white'}">${isSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-white"></span>' : ''}</span></td>
+            <td class="py-3 px-3 ${isSelected ? 'font-bold text-gray-900' : 'font-medium'}">${name}</td>
+            <td class="py-3 px-3 text-center">${row.acc}</td>
+            <td class="py-3 px-3 text-center">${row.prec}</td>
+            <td class="py-3 px-3 text-center">${row.rec}</td>
+            <td class="py-3 px-3 text-center">${row.f1}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('evalMatrixTitle').textContent = `Confusion Matrix (${m.shortName})`;
+      const labels = ['Positive', 'Neutral', 'Negative'];
+      let html = '';
+      for (let r = 0; r < 3; r++) {
+        html += `<div class="text-right pr-2 font-medium text-gray-700 text-[12px]">${labels[r]}</div>`;
+        for (let c = 0; c < 3; c++) {
+          const val = m.matrix[r][c];
+          const cellStyle = val >= 700 ? 'background:#4c14e8; color:#fff;' : (val >= 450 ? 'background:#7c4dff; color:#fff;' : (val >= 300 ? 'background:#b794f4; color:#111827;' : 'background:#f3f0ff; color:#1f2937;'));
+          html += `<div class="py-3.5 px-2 rounded-lg font-extrabold text-[14px] shadow-2xs" style="${cellStyle}">${val}</div>`;
+        }
+      }
+      html += `<div></div>` + labels.map(l => `<div class="pt-1.5 text-[11.5px] font-medium text-gray-700">${l}</div>`).join('');
+      document.getElementById('confusionMatrixGrid').innerHTML = html;
+
+      document.getElementById('evalClasswiseTitle').textContent = `Class-wise Performance (${m.shortName})`;
+      document.getElementById('evalClasswiseTbody').innerHTML = m.classes.map(c => `
+        <tr class="hover:bg-gray-50/70">
+          <td class="py-3 px-4 font-semibold text-gray-900 flex items-center gap-2.5"><span class="w-3.5 h-3.5 rounded-full inline-block" style="background:${c.color}"></span><span>${c.name}</span></td>
+          <td class="py-3 px-4 text-center font-medium text-gray-800">${c.prec}</td>
+          <td class="py-3 px-4 text-center font-medium text-gray-800">${c.rec}</td>
+          <td class="py-3 px-4 text-center font-medium text-gray-800">${c.f1}</td>
+          <td class="py-3 px-4 text-center font-semibold text-gray-900">${c.support}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('evalInsightsList').innerHTML = m.insights.map(text => `
+        <div class="flex items-start gap-3">
+          <span class="w-6 h-6 rounded-full bg-[#dcfce7] text-[#15803d] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">&#10003;</span>
+          <p class="leading-relaxed">${text}</p>
+        </div>
+      `).join('');
+    }
+
+    function toggleNotifications() { document.getElementById('notifDropdown').classList.toggle('hidden'); }
+    function markAllNotificationsRead() { document.getElementById('notifDot').classList.add('hidden'); document.getElementById('notifDropdown').classList.add('hidden'); showToast('All notifications marked as read'); }
+    function openTeamModal() { const m = document.getElementById('teamModal'); m.classList.remove('hidden'); m.classList.add('flex'); }
+    function closeTeamModal() { const m = document.getElementById('teamModal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+    function selectWorkspaceTeam(name) { document.getElementById('activeWorkspaceLabel').textContent = name; closeTeamModal(); showToast(`Switched workspace to ${name}`); }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      document.getElementById('toastMessage').textContent = msg;
+      banner.classList.remove('hidden');
+      banner.classList.add('flex');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { banner.classList.add('hidden'); banner.classList.remove('flex'); }, 3200);
+    }
+
+    // Initialize & sync with FastAPI on load
+    window.addEventListener('DOMContentLoaded', () => {
+      updateCharCount();
+      renderAspectDeepDive();
+      generateInsightsReport(false);
+      renderModelEvaluationView();
+      syncDashboardFromAPI();
+      syncEvaluationFromAPI();
+    });
+  </script>
+</body>
+</html>
