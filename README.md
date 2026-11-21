@@ -23,6 +23,19 @@ Insightify is a full-stack NLP web application that analyzes customer product re
    - Loads offline benchmark metrics (`eval_metrics.json`) comparing the **DistilBERT Transformer** against a **TF-IDF + Linear SVM** baseline across Accuracy, Precision, Recall, F1-Score, and average CPU inference latency.
 
 ---
+## Screenshots
+
+### 1. Overview Dashboard
+![Overview Dashboard](screenshots/overview.png)
+
+### 2. Live Sentiment & Aspect Analyzer
+![Live Sentiment & Aspect Analyzer](screenshots/sentiment_analyzer.png)
+
+### 3. Review Inbox & Feedback Queue
+![Review Inbox & Feedback Queue](screenshots/review_inbox.png)
+
+### 4. Model Evaluation (DistilBERT vs. TF-IDF + SVM)
+![Model Evaluation](screenshots/model_evaluation.png)
 
 ## Tech Stack
 
